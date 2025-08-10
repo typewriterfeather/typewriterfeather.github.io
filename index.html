@@ -1,169 +1,74 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Drive API Quickstart</title>
-    <meta charset="utf-8" />
-  </head>
-  <body>
-    <p>Drive API Quickstart</p>
 
-    <!--Add buttons to initiate auth sequence and sign out-->
-    <button>Hello</button>
-    <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
-    <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
-    <button id="signout_button" onclick="createEmptyFile('roger.txt', '')">Создать файл</button>
+<head>
+  <title>DropBox Auth</title>
+  <meta charset="utf-8" name="viewport" content="user-scalable=1.0,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dropbox@10.34.0/dist/Dropbox-sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+  <script src="dist/pell.js"></script>
+  <script src="/utils.js"></script>
 
-    <pre id="content" style="white-space: pre-wrap;"></pre>
+  <link rel="stylesheet" type="text/css" href="dist/pell.css">
 
-    <script type="text/javascript">
-      /* exported gapiLoaded */
-      /* exported gisLoaded */
-      /* exported handleAuthClick */
-      /* exported handleSignoutClick */
-
-      // TODO(developer): Set to client ID and API key from the Developer Console
-      const CLIENT_ID = '669402998391-un0jisnvu5b92kbresf0od06rqia1om7.apps.googleusercontent.com';
-      const API_KEY = 'AIzaSyDAqrE6Rocd9m6ijmxO7sfQHyhE--kYC0A';
-
-      // Discovery doc URL for APIs used by the quickstart
-      const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-
-      // Authorization scopes required by the API; multiple scopes can be
-      // included, separated by spaces.
-      const SCOPES = 'https://www.googleapis.com/auth/drive.metadata.readonly';
-
-      let tokenClient;
-      let gapiInited = false;
-      let gisInited = false;
-
-      document.getElementById('authorize_button').style.visibility = 'hidden';
-      document.getElementById('signout_button').style.visibility = 'hidden';
-
-      /**
-       * Callback after api.js is loaded.
-       */
-      function gapiLoaded() {
-        gapi.load('client', initializeGapiClient);
+  <style>
+      body {
+        margin: 0;
+        padding: 0;
       }
 
-      /**
-       * Callback after the API client is loaded. Loads the
-       * discovery doc to initialize the API.
-       */
-      async function initializeGapiClient() {
-        await gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: [DISCOVERY_DOC],
-        });
-        gapiInited = true;
-        maybeEnableButtons();
+      .content {
+        box-sizing: border-box;
+        margin: 0 auto;
+        max-width: 600px;
+        padding: 20px;
       }
 
-      /**
-       * Callback after Google Identity Services are loaded.
-       */
-      function gisLoaded() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-          client_id: CLIENT_ID,
-          scope: SCOPES,
-          callback: '', // defined later
-        });
-        gisInited = true;
-        maybeEnableButtons();
+      #html-output {
+        white-space: pre-wrap;
       }
+    </style>
+</head>
 
-      /**
-       * Enables user interaction after all libraries are loaded.
-       */
-      function maybeEnableButtons() {
-        if (gapiInited && gisInited) {
-          document.getElementById('authorize_button').style.visibility = 'visible';
-        }
-      }
+<body>
+  <!-- Example layout boilerplate -->
+  <a href="" id="authlink" class="button">Залогиниться</a>
+  <a href="" id="authdissconnect" class="button">Разлогиниться</a>
+  <button onclick="getCode1()">GET CODE</button>
+  <button onclick="getRefreshToken()">REFRESH TOKEN</button>
+  <button onclick="getToken()">get token</button>
+  <br><br>
 
-      /**
-       *  Sign in the user upon button click.
-       */
-      function handleAuthClick() {
-        tokenClient.callback = async (resp) => {
-          if (resp.error !== undefined) {
-            throw (resp);
-          }
-          document.getElementById('signout_button').style.visibility = 'visible';
-          document.getElementById('authorize_button').innerText = 'Refresh';
-          await listFiles();
-        };
+  Список файлов:
 
-        if (gapi.client.getToken() === null) {
-          // Prompt the user to select a Google Account and ask for consent to share their data
-          // when establishing a new session.
-          tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-          // Skip display of account chooser and consent dialog for an existing session.
-          tokenClient.requestAccessToken({prompt: ''});
-        }
-      }
+  <br><br>
 
-      /**
-       *  Sign out the user upon button click.
-       */
-      function handleSignoutClick() {
-        const token = gapi.client.getToken();
-        if (token !== null) {
-          google.accounts.oauth2.revoke(token.access_token);
-          gapi.client.setToken('');
-          document.getElementById('content').innerText = '';
-          document.getElementById('authorize_button').innerText = 'Authorize';
-          document.getElementById('signout_button').style.visibility = 'hidden';
-        }
-      }
+  <ul id="files"></ul>
 
-      /**
-       * Print metadata for first 10 files.
-       */
-      async function listFiles() {
-        let response;
-        try {
-          response = await gapi.client.drive.files.list({
-            'pageSize': 10,
-            'fields': 'files(id, name)',
-          });
-        } catch (err) {
-          document.getElementById('content').innerText = err.message;
-          return;
-        }
-        const files = response.result.files;
-        if (!files || files.length == 0) {
-          document.getElementById('content').innerText = 'No files found.';
-          return;
-        }
-        // Flatten to string to display
-        const output = files.reduce(
-            (str, file) => `${str}${file.name} (${file.id})\n`,
-            'Files:\n');
-        document.getElementById('content').innerText = output;
-      }
+  <br><br>
 
-      async function createEmptyFile(name, mimeType) {
-        if ((await find(‘name = "’ + name + '"')).length <= 0) {
-        // файл(ы) не существует
-          const resp = await prom(gapi.client.drive.files.create, {
-            resource: {
-                name: name,
-                // для создания папки используйте
-                // mimeType = 'application/vnd.google-apps.folder'
-                mimeType: mimeType || 'text/plain',
-                // вместо 'appDataFolder' можно использовать ID папки
-                parents: ['appDataFolder']
-            },
-            fields: 'id'
-        })
-        // функция возвращает строку — идентификатор нового файла
-        return resp.result.id
-      }
-    }
-    </script>
-    <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-    <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
-  </body>
+  <input type="text" id="file-upload" />
+  <button type="submit" onclick="uploadFile()">Submit</button>
+  <h2 id="results"></h2>
+
+  <br><br><br><br><br>
+
+  <div class="content">
+    <h1>pell</h1>
+    <div id="editor" class="pell"></div>
+    <div style="margin-top:20px;">
+      <h3>Text output:</h3>
+      <div id="text-output"></div>
+    </div>
+    <div style="margin-top:20px;">
+      <h3>HTML output:</h3>
+      <pre id="html-output"></pre>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+
 </html>
