@@ -1,0 +1,38 @@
+body {
+  font-family: 'TimesNewRoman';
+  font-size: 1.5em;
+}
+
+.welcome {
+  font-size: 1.4em;
+}
+
+.img_header {
+  max-width: 40vh; 
+}
+
+.img_bottom {
+  max-width: 40vh;  
+}
+
+.SimpleText {
+  max-width: 50vh;
+}
+
+.centeredElem {
+  text-align: center;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.inputCode {
+  width: 40vh;
+}
+
+.buttonEnter {
+  font-family: 'TimesNewRoman';
+  font-size: 1em;
+}
