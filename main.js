@@ -1,10 +1,10 @@
 var editor = window.pell.init({
         element: document.getElementById('editor'),
-        defaultParagraphSeparator: 'p',
-        onChange: function (html) {
-          document.getElementById('text-output').innerHTML = html
-          document.getElementById('html-output').textContent = html
-        }
+        defaultParagraphSeparator: 'p'//,
+        //onChange: function (html) {
+        //  document.getElementById('text-output').innerHTML = html
+        //  document.getElementById('html-output').textContent = html
+        //}
       })
 
 var CLIENT_ID = 'kj5lj89k7br0v46'; // APP KEY
@@ -195,4 +195,5 @@ function uploadFile() {
         
       }*/
   return false;
+
 }
