@@ -54,11 +54,7 @@ async function getCode1() {
 }
 
 async function getToken() {
-  var dbx = new Dropbox.Dropbox({ 
-    clientId: APP_KEY,
-    clientSecret: APP_SECRET,
-    refreshToken: REFRESH_TOKEN
-  });
+  var dbx = makeDbx();
 
   dbx.filesListFolder({ path: '' })
     .then(function (response) {
@@ -67,7 +63,6 @@ async function getToken() {
     .catch(function (error) {
       console.error(error.error || error);
     });
-
 
 }
 

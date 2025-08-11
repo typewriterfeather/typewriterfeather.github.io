@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dropbox@10.34.0/dist/Dropbox-sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
-  <script src="js/base.js?v1"></script>
+  <script src="js/base.js?v3"></script>
   <script src="js/utils.js"></script>
 
   <link rel="stylesheet" type="text/css" href="css/chooseBook.css">
@@ -16,17 +16,35 @@
 </head>
 
 <body>
-  <div>
-    <button onclick="Exit()">Выйти из аккаунта</button>
-    <p id="pAccountName"></p>
+  <div class="headerContainer">
+    <div class="headerUID">
+      <p id="pAccountName"></p>
+    </div>
+    <div class="headerExitB">
+      <button onclick="Exit()">Выйти из аккаунта</button>
+    </div>
+  </div>
+
+  <div class="centeredText">
+    Список книг:
   </div>
 
   <div>
+    <button>Посмотреть список книг</button>
+    <button onclick="saveFiles()">Загрузить файл</button>
+    <button onclick="readFiles()">Прочитать файл</button>
+    <button onclick="addBook()">Добавить книгу</button>
+    <button onclick="findParam()">Найти номер параметра</button>
+  </div>
 
+  <div>
+    <p id="textOutput">
+
+    </p>
   </div>
 
   
-  <script src="js/chooseBook.js?v1"></script>
+  <script src="js/chooseBook.js?v3"></script>
 </body>
 
 </html>

@@ -1,0 +1,16 @@
+.headerContainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom-width:2px;
+   border-bottom-color:rgb(0, 0, 0);
+   border-bottom-style: solid;
+   padding-left: 5vw;
+   padding-right: 5vw;
+}
+
+.centeredText {
+  padding: 2vw;
+  text-align: center;
+}
