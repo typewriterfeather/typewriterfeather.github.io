@@ -4,7 +4,8 @@ var APP_SECRET = 'px68axwvij1w561';
 var REFRESH_TOKEN = localStorage.getItem('dbRefreshToken');
 var UID = localStorage.getItem('dbUID');
 
-mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
+mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
+mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 
 async function dbFileExists(folder, name) {
     var dbx = new Dropbox.Dropbox({
@@ -106,7 +107,7 @@ function mdaWriteParam(arr, n, param, data) {
     }
 }
 
-function mdaReadBooks(arrin) {
+function mdaReadBooks(arrin, arrPrms) {
     let arr, aro;
     aro = [];
     if (arrin == null) {
@@ -119,12 +120,12 @@ function mdaReadBooks(arrin) {
         let laro = aro.length;
         aro.length = laro + 1;
         aro[laro] = [];
-        aro[laro].length = mdaBooksParams.length;
+        aro[laro].length = arrPrms.length;
         let n = arr[0];
         n.replace(/\D/g, '');
         n = parseInt(n);
-        for (let j = 0; j < mdaBooksParams.length; j++) {
-            let i1 = mdaFindParamI(arr, n, mdaBooksParams[j]);
+        for (let j = 0; j < arrPrms.length; j++) {
+            let i1 = mdaFindParamI(arr, n, arrPrms[j]);
             if (i1 > -1) {
                 aro[i][j] = arr[i1 + 1];
                 arr.splice(i1, 2);
@@ -136,13 +137,13 @@ function mdaReadBooks(arrin) {
     return aro;
 }
 
-function mdaSaveBooks(arr) {
+function mdaSaveBooks(arr, arrPrms) {
     let arro = [];
-    let l = mdaBooksParams.length;
+    let l = arrPrms.length;
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < l; j++) {
             if ((arr[i][j]) && (arr[i][j] != '')) {
-                arro.push(i.toString() + mdaBooksParams[j]);
+                arro.push(i.toString() + arrPrms[j]);
                 arro.push(arr[i][j]);
             }
         }
@@ -151,7 +152,7 @@ function mdaSaveBooks(arr) {
     return arro;
 }
 
-function mdaAddBook(bName, books) {
+function mdaAddBook(bName, books, arrPrms) {
     //console.log(books);
     let l = books.length;
     let found = false;
@@ -169,11 +170,36 @@ function mdaAddBook(bName, books) {
 
     books.length = l + 1;
     books[l] = [];
-    books[l].length = mdaBooksParams.length;
+    books[l].length = arrPrms.length;
     books[l][0] = k;
     books[l][1] = bName;
     books[l][2] = (+(new Date())).toString();
     //console.log(books);
+}
+
+function mdaAddChapter(cName, chapters, arrPrms) {
+    //console.log(chapters);
+    let l = chapters.length;
+    let found = false;
+    k = 0;
+    while (!found) {
+        found = true;
+        k++;
+        for (let i = 0; i < l; i++) {
+            if (chapters[i][0] == k) {
+                found = false;
+                break;
+            }
+        }
+    }
+
+    chapters.length = l + 1;
+    chapters[l] = [];
+    chapters[l].length = arrPrms.length;
+    chapters[l][0] = k;
+    chapters[l][1] = cName;
+    chapters[l][2] = (+(new Date())).toString();
+    //console.log(chapters);
 }
 
 function mdaCreateBookButtonHTML(book, i) {
@@ -204,13 +230,18 @@ function mdaCreateBookButtonHTML(book, i) {
     let ltPercentWords = 0;
     let ltPercentDayz = 0;
 
-    if (book[6] && book[7] && book[8] && book[9]) {
-        let lt1 = parseInt(book[6]);
-        let lt2 = parseInt(book[7]);
-        let ltdb = parseInt(book[8]);
-        let ltde = parseInt(book[9]);
+    if (book[6] && book[7] && book[8] && book[9] && book[10]) {
+        let lt0 = parseInt(book[6]);
+        let lt1 = parseInt(book[7]);
+        let lt2 = parseInt(book[8]);
+        let ltdb = parseInt(book[9]);
+        let ltde = parseInt(book[10]);
         let ltNeededWords = lt2 - lt1;
-        ltPercentWords = Math.ceil(lt1 / lt2 * 100);
+        let ltWordsFull = lt2 - lt0;
+        if (ltWordsFull == 0) {
+            ltWordsFull = 10000000;
+        }
+        ltPercentWords = Math.ceil((lt1 - lt0) / ltWordsFull * 100);
         let ltDaysLeft = Math.ceil((ltde - todayDate) / 86400000);
         let ltDaysFull = Math.ceil((ltde - ltdb) / 86400000);
         ltPercentDayz = Math.ceil((ltDaysFull - ltDaysLeft) / ltDaysFull * 100);
@@ -226,13 +257,18 @@ function mdaCreateBookButtonHTML(book, i) {
     let ltlPercentWords = 0;
     let ltlPercentDayz = 0;
 
-    if (book[10] && book[11] && book[12] && book[13]) {
-        let ltl1 = parseInt(book[10]);
-        let ltl2 = parseInt(book[11]);
-        let ltldb = parseInt(book[12]);
-        let ltlde = parseInt(book[13]);
+    if (book[6] && book[11] && book[12] && book[13] && book[14]) {
+        let ltl0 = parseInt(book[6]);
+        let ltl1 = parseInt(book[11]);
+        let ltl2 = parseInt(book[12]);
+        let ltldb = parseInt(book[13]);
+        let ltlde = parseInt(book[14]);
         let ltlNeededWords = ltl2 - ltl1;
-        ltPercentWords = Math.ceil(ltl1 / ltl2 * 100);
+        let ltlWordsFull = ltl2 - ltl0;
+        if (ltlWordsFull == 0) {
+            ltlWordsFull = 10000000;
+        }
+        ltPercentWords = Math.ceil((ltl1 - ltl0) / ltlWordsFull * 100);
         let ltlDaysLeft = Math.ceil((ltlde - todayDate) / 86400000);
         let ltlDaysFull = Math.ceil((ltlde - ltldb) / 86400000);
         ltlPercentDayz = Math.ceil((ltlDaysFull - ltlDaysLeft) / ltlDaysFull * 100);
@@ -245,6 +281,94 @@ function mdaCreateBookButtonHTML(book, i) {
 
     let out = '';
     out += book[1] + lastChapter;
+    out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
+    out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
+    out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
+    out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
+    out += '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: ' + editDateS + '</div></div>';
+
+    return out;
+}
+
+function mdaCreateChapterButtonHTML(chapter, i) {
+    let creationDateS = 'не задано.';
+    let editDateS = 'не задано.';
+    let lastChapter = '';
+
+    if (chapter[2]) {
+        let creationDate = new Date(parseInt(chapter[2]));
+        creationDateS = mdaDateAddZero(creationDate.getDay()) + '.' + mdaDateAddZero(creationDate.getMonth()) + '.' + creationDate.getFullYear();
+    }
+
+    if (chapter[3]) {
+        let editDate = new Date(parseInt(chapter[3]));
+        editDateS = mdaDateAddZero(editDate.getDay()) + '.' + mdaDateAddZero(editDate.getMonth()) + '.' + editDate.getFullYear();
+    }
+
+    if (chapter[4]) {
+        lastChapter = '<br>Глава ' + chapter[4];
+        if (chapter[5]) {
+            lastChapter += ' — ' + chapter[5];
+        }
+    }
+
+    let todayDate = new Date();
+
+    let ltNeededWordsS = '-';
+    let ltPercentWords = 0;
+    let ltPercentDayz = 0;
+
+    if (chapter[6] && chapter[7] && chapter[8] && chapter[9] && chapter[10]) {
+        let lt0 = parseInt(chapter[6]);
+        let lt1 = parseInt(chapter[7]);
+        let lt2 = parseInt(chapter[8]);
+        let ltdb = parseInt(chapter[9]);
+        let ltde = parseInt(chapter[10]);
+        let ltNeededWords = lt2 - lt1;
+        let ltWordsFull = lt2 - lt0;
+        if (ltWordsFull == 0) {
+            ltWordsFull = 10000000;
+        }
+        ltPercentWords = Math.ceil((lt1 - lt0) / ltWordsFull * 100);
+        let ltDaysLeft = Math.ceil((ltde - todayDate) / 86400000);
+        let ltDaysFull = Math.ceil((ltde - ltdb) / 86400000);
+        ltPercentDayz = Math.ceil((ltDaysFull - ltDaysLeft) / ltDaysFull * 100);
+
+        ltPercentWords = clampNumber(ltPercentWords, 0, 100);
+        ltPercentDayz = clampNumber(ltPercentDayz, 0, 100);
+
+        ltNeededWordsS = ltNeededWords;
+    }
+
+    let ltlNeededWordsS = '-';
+    let ltlDaysLeftS = '-';
+    let ltlPercentWords = 0;
+    let ltlPercentDayz = 0;
+
+    if (chapter[6] && chapter[11] && chapter[12] && chapter[13] && chapter[14]) {
+        let ltl0 = parseInt(chapter[6]);
+        let ltl1 = parseInt(chapter[11]);
+        let ltl2 = parseInt(chapter[12]);
+        let ltldb = parseInt(chapter[13]);
+        let ltlde = parseInt(chapter[14]);
+        let ltlNeededWords = ltl2 - ltl1;
+        let ltlWordsFull = ltl2 - ltl0;
+        if (ltlWordsFull == 0) {
+            ltlWordsFull = 10000000;
+        }
+        ltPercentWords = Math.ceil((ltl1 - ltl0) / ltlWordsFull * 100);
+        let ltlDaysLeft = Math.ceil((ltlde - todayDate) / 86400000);
+        let ltlDaysFull = Math.ceil((ltlde - ltldb) / 86400000);
+        ltlPercentDayz = Math.ceil((ltlDaysFull - ltlDaysLeft) / ltlDaysFull * 100);
+        ltlPercentWords = clampNumber(ltlPercentWords, 0, 100);
+        ltlPercentDayz = clampNumber(ltlPercentDayz, 0, 100);
+
+        ltlNeededWordsS = ltlNeededWords;
+        ltlDaysLeftS = ltlDaysLeft;
+    }
+
+    let out = '';
+    out += 'Глава ' + (i+1) + ' — ' + chapter[1] + lastChapter;
     out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
     out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
     out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
