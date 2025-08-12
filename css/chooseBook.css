@@ -2,13 +2,13 @@ body {
   display: flex;
   align-items: center;
   align-content: center;
-  justify-content:center;
+  justify-content: center;
   overflow: auto;
 }
 
 .container {
+  width: 100vh;
   max-width: 100vh;
-  min-width: 40vh;
   align-content: center;
 }
 
@@ -17,11 +17,12 @@ body {
   flex-direction: row;
   justify-content: space-between;
   align-items: baseline;
-  border-bottom-width:2px;
-   border-bottom-color:rgb(0, 0, 0);
-   border-bottom-style: solid;
-   padding-left: 5vw;
-   padding-right: 5vw;
+  border-bottom-width: 2px;
+  border-bottom-color: rgb(0, 0, 0);
+  border-bottom-style: solid;
+  padding-left: 5vw;
+  padding-right: 5vw;
+  flex: 0 0 100%;
 }
 
 .centeredText {
@@ -34,6 +35,7 @@ body {
   width: 100%;
   margin-top: 0.3em;
   margin-bottom: 0.3em;
+  word-break: break-all;
 }
 
 .bars {
@@ -54,6 +56,7 @@ body {
   width: 40%;
   height: 1em;
 }
+
 .progressDiv2 progress {
   position: relative;
 }
@@ -66,6 +69,10 @@ body {
   align-content: center;
   justify-content: space-around;
   overflow: auto;
+}
+
+.barnum {
+  word-break: normal;
 }
 
 .barContainer {
@@ -82,5 +89,5 @@ body {
 
 .barContainer .bar2 {
   height: 50%;
-  background-color:aqua;
+  background-color: aqua;
 }

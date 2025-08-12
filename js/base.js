@@ -179,8 +179,13 @@ function mdaAddBook(bName, books) {
 function mdaCreateBookButtonHTML(book, i) {
     let out = '';
     out = out + book[1];
-    out = out + '<div class="bars"><div class="barContainer"><div class="bar1" style="width: 30%"></div><div class="bar2" style="width: 60%"></div></div><div>1000</div><div class="barContainer"><div class="bar1" style="width: 40%"></div><div class="bar2" style="width: 50%"></div></div><div>20000/20</div></div>';
-    out = out + '<div class="dates"><div>Созд.: 22.02.2002</div><div>Ред.: 23.02.2002</div></div>';
+    let creationDate = new Date(parseInt(book[2]));
+    let creationDateS = creationDate.getDay() + '.' + creationDate.getMonth() + '.' + creationDate.getFullYear();
+    out = out + '<div class="bars"><div class="barContainer"><div class="bar1" style="width: 30%">';
+    out = out + '</div><div class="bar2" style="width: 60%"></div></div><div class="barnum">1000</div>';
+    out = out + '<div class="barContainer"><div class="bar1" style="width: 40%"></div><div class="bar2" style="width: 50%">';
+    out = out + '</div></div><div class="barnum">20000/20</div></div>';
+    out = out + '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: 23.02.2002</div></div>';
 
     return out;
 }
