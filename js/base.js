@@ -4,7 +4,7 @@ var APP_SECRET = 'px68axwvij1w561';
 var REFRESH_TOKEN = localStorage.getItem('dbRefreshToken');
 var UID = localStorage.getItem('dbUID');
 
-mdaBooksParams = ['', 'D', 'DS', 'LC', 'LCN', 'LT1', 'LT2', 'LTD', 'LTL1', 'LTL2', 'LTD1', 'LTD2'];
+mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTF', 'LTS', 'LTD', 'LTLF', 'LTLS', 'LTDF', 'LTDS'];
 
 async function dbFileExists(folder, name) {
     var dbx = new Dropbox.Dropbox({
@@ -47,7 +47,7 @@ async function dbDownloadStringArray(folder, name) {
             })
 
         var tex = await res.text();
-        var tex1 = tex.split(',');
+        var tex1 = tex.split('	');
         return tex1;
     } else {
         return null;
@@ -61,9 +61,10 @@ async function dbUploadStringArray(data, folder, name) {
         refreshToken: REFRESH_TOKEN
     });
 
-    let newFile = new Blob([data], { type: "octet/stream" });
+    let jointData = data.join('	');
+    //let newFile = new Blob(jointData, { type: "text/plain" });
 
-    dbx.filesUpload({ path: folder + '/' + name, contents: newFile, mode: 'overwrite' })
+    dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
         .then(function (response) {
             console.log('Массив строк загружен');
             console.log(response);
@@ -107,8 +108,11 @@ function mdaWriteParam(arr, n, param, data) {
 
 function mdaReadBooks(arrin) {
     let arr, aro;
-    arr = arrin.slice(0);
     aro = [];
+    if (arrin == null) {
+        return aro;
+    }
+    arr = arrin.slice(0);
     let l = arr.length;
     let i = 0;
     while (l > 1) {
@@ -137,11 +141,46 @@ function mdaSaveBooks(arr) {
     let l = mdaBooksParams.length;
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < l; j++) {
-            if (arr[i][j] != null) {
+            if ((arr[i][j]) && (arr[i][j] != '')) {
                 arro.push(i.toString() + mdaBooksParams[j]);
                 arro.push(arr[i][j]);
             }
         }
     }
+    console.log(arro);
     return arro;
+}
+
+function mdaAddBook(bName, books) {
+    //console.log(books);
+    let l = books.length;
+    let found = false;
+    k = 0;
+    while (!found) {
+        found = true;
+        k++;
+        for (let i = 0; i < l; i++) {
+            if (books[i][0] == k) {
+                found = false;
+                break;
+            }
+        }
+    }
+
+    books.length = l + 1;
+    books[l] = [];
+    books[l].length = mdaBooksParams.length;
+    books[l][0] = k;
+    books[l][1] = bName;
+    books[l][2] = (+(new Date())).toString();
+    //console.log(books);
+}
+
+function mdaCreateBookButtonHTML(book, i) {
+    let out = '';
+    out = out + book[1];
+    out = out + '<div class="bars"><div class="barContainer"><div class="bar1" style="width: 30%"></div><div class="bar2" style="width: 60%"></div></div><div>1000</div><div class="barContainer"><div class="bar1" style="width: 40%"></div><div class="bar2" style="width: 50%"></div></div><div>20000/20</div></div>';
+    out = out + '<div class="dates"><div>Созд.: 22.02.2002</div><div>Ред.: 23.02.2002</div></div>';
+
+    return out;
 }

@@ -1,6 +1,6 @@
 document.getElementById('pAccountName').innerHTML = 'UID: ' + UID;
-var books = [[]];
-//var books = ['1', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
+var books = [];
+//var books = ['1', '1', '1N', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', '2', '2N', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', '4', '4N', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', '7', '7N', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
 
 function Exit() {
   let confirmExit = confirm('Вы действительно хотите выйти?');
@@ -24,17 +24,33 @@ async function readFiles() {
 
 async function saveFiles() {
   dbUploadStringArray(mdaSaveBooks(books), '', 'books.txt');
+  //dbUploadStringArray(mdaSaveBooks(mdaReadBooks(books)), '', 'books.txt');
 }
 
-async function addBook() {
-  //mdaWriteParam(books, 1, '', 'NOOOO')
-  //console.log(mdaFindParamI(books, '', ''));
-  //let l = books.length;
-  //books[l] = '' + l;
-  //books[l+1] = '' + (l + 1);
-  //document.getElementById('textOutput').innerText = books;  
+function addBook() {
+  let bName = prompt('Введите название книги:', '');
+  if ((bName) && (bName != '')) {
+    mdaAddBook(bName, books);
+  }
 }
 
 function findParam() {
   console.log(mdaSaveBooks(mdaReadBooks(books)));
+}
+
+function testFunc(n) {
+  alert('Button: ' + n);
+}
+
+function testDate() {
+  const parentElement = document.getElementById('books'); // DOM location when buttons will be added
+  parentElement.replaceChildren();
+  for (let i = 0; i < books.length; i++) {
+    const book = books[i];
+    const btn = document.createElement("button");
+    btn.innerHTML = mdaCreateBookButtonHTML(book, i);
+    btn.setAttribute('class', 'buttonBook');
+    btn.setAttribute('onclick', 'testFunc(' + i + ')');
+    parentElement.appendChild(btn);
+  }
 }

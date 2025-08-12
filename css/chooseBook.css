@@ -1,3 +1,17 @@
+body {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content:center;
+  overflow: auto;
+}
+
+.container {
+  max-width: 100vh;
+  min-width: 40vh;
+  align-content: center;
+}
+
 .headerContainer {
   display: flex;
   flex-direction: row;
@@ -11,6 +25,62 @@
 }
 
 .centeredText {
-  padding: 2vw;
+  font-size: 1.5em;
+  padding: 0.5em;
   text-align: center;
+}
+
+.buttonBook {
+  width: 100%;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+.bars {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: space-evenly;
+  overflow: auto;
+}
+
+.progressDiv progress {
+  background-color: rgb(228, 11, 11);
+  border-radius: 13px;
+  /* (height of inner div) / 2 + padding */
+  padding: 3px;
+  width: 40%;
+  height: 1em;
+}
+.progressDiv2 progress {
+  position: relative;
+}
+
+.dates {
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: space-around;
+  overflow: auto;
+}
+
+.barContainer {
+  width: 40%;
+  height: 1em;
+  border: 1px solid black;
+  background-color: blue;
+}
+
+.barContainer .bar1 {
+  height: 50%;
+  background-color: darkkhaki;
+}
+
+.barContainer .bar2 {
+  height: 50%;
+  background-color:aqua;
 }
