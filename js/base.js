@@ -4,7 +4,7 @@ var APP_SECRET = 'px68axwvij1w561';
 var REFRESH_TOKEN = localStorage.getItem('dbRefreshToken');
 var UID = localStorage.getItem('dbUID');
 
-mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTF', 'LTS', 'LTD', 'LTLF', 'LTLS', 'LTDF', 'LTDS'];
+mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 
 async function dbFileExists(folder, name) {
     var dbx = new Dropbox.Dropbox({
@@ -177,15 +177,91 @@ function mdaAddBook(bName, books) {
 }
 
 function mdaCreateBookButtonHTML(book, i) {
+    let creationDateS = 'не задано.';
+    let editDateS = 'не задано.';
+    let lastChapter = '';
+
+    if (book[2]) {
+        let creationDate = new Date(parseInt(book[2]));
+        creationDateS = mdaDateAddZero(creationDate.getDay()) + '.' + mdaDateAddZero(creationDate.getMonth()) + '.' + creationDate.getFullYear();
+    }
+
+    if (book[3]) {
+        let editDate = new Date(parseInt(book[3]));
+        editDateS = mdaDateAddZero(editDate.getDay()) + '.' + mdaDateAddZero(editDate.getMonth()) + '.' + editDate.getFullYear();
+    }
+
+    if (book[4]) {
+        lastChapter = '<br>Глава ' + book[4];
+        if (book[5]) {
+            lastChapter += ' — ' + book[5];
+        }
+    }
+
+    let todayDate = new Date();
+
+    let ltNeededWordsS = '-';
+    let ltPercentWords = 0;
+    let ltPercentDayz = 0;
+
+    if (book[6] && book[7] && book[8] && book[9]) {
+        let lt1 = parseInt(book[6]);
+        let lt2 = parseInt(book[7]);
+        let ltdb = parseInt(book[8]);
+        let ltde = parseInt(book[9]);
+        let ltNeededWords = lt2 - lt1;
+        ltPercentWords = Math.ceil(lt1 / lt2 * 100);
+        let ltDaysLeft = Math.ceil((ltde - todayDate) / 86400000);
+        let ltDaysFull = Math.ceil((ltde - ltdb) / 86400000);
+        ltPercentDayz = Math.ceil((ltDaysFull - ltDaysLeft) / ltDaysFull * 100);
+
+        ltPercentWords = clampNumber(ltPercentWords, 0, 100);
+        ltPercentDayz = clampNumber(ltPercentDayz, 0, 100);
+
+        ltNeededWordsS = ltNeededWords;
+    }
+
+    let ltlNeededWordsS = '-';
+    let ltlDaysLeftS = '-';
+    let ltlPercentWords = 0;
+    let ltlPercentDayz = 0;
+
+    if (book[10] && book[11] && book[12] && book[13]) {
+        let ltl1 = parseInt(book[10]);
+        let ltl2 = parseInt(book[11]);
+        let ltldb = parseInt(book[12]);
+        let ltlde = parseInt(book[13]);
+        let ltlNeededWords = ltl2 - ltl1;
+        ltPercentWords = Math.ceil(ltl1 / ltl2 * 100);
+        let ltlDaysLeft = Math.ceil((ltlde - todayDate) / 86400000);
+        let ltlDaysFull = Math.ceil((ltlde - ltldb) / 86400000);
+        ltlPercentDayz = Math.ceil((ltlDaysFull - ltlDaysLeft) / ltlDaysFull * 100);
+        ltlPercentWords = clampNumber(ltlPercentWords, 0, 100);
+        ltlPercentDayz = clampNumber(ltlPercentDayz, 0, 100);
+
+        ltlNeededWordsS = ltlNeededWords;
+        ltlDaysLeftS = ltlDaysLeft;
+    }
+
     let out = '';
-    out = out + book[1];
-    let creationDate = new Date(parseInt(book[2]));
-    let creationDateS = creationDate.getDay() + '.' + creationDate.getMonth() + '.' + creationDate.getFullYear();
-    out = out + '<div class="bars"><div class="barContainer"><div class="bar1" style="width: 30%">';
-    out = out + '</div><div class="bar2" style="width: 60%"></div></div><div class="barnum">1000</div>';
-    out = out + '<div class="barContainer"><div class="bar1" style="width: 40%"></div><div class="bar2" style="width: 50%">';
-    out = out + '</div></div><div class="barnum">20000/20</div></div>';
-    out = out + '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: 23.02.2002</div></div>';
+    out += book[1] + lastChapter;
+    out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
+    out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
+    out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
+    out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
+    out += '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: ' + editDateS + '</div></div>';
 
     return out;
+}
+
+function mdaDateAddZero(day) {
+    let out = day.toString();
+    if (day < 10) {
+        out = '0' + out;
+    }
+    return out;
+}
+
+function clampNumber(val, min, max) {
+    return Math.min(Math.max(val, min), max);
 }

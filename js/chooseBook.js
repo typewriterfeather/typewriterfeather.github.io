@@ -74,9 +74,22 @@ function showBook() {
   const parentElement = document.getElementById('books');
   hideBooks();
   createBookButton(choosedBook, parentElement, false);
+  createButton(parentElement, 'Настройки книги', 'showBookSettings', '');
+  createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
+  createButton(parentElement, 'СОДЕРЖАНИЕ', '', '');
+}
+
+function showBookSettings() {
+  setTitle('Настройки книги')
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  createBookButton(choosedBook, parentElement, false);
   createButton(parentElement, 'Задать цель на день', '', '');
   createButton(parentElement, 'Задать цель на определённый срок', '', '');
+  createButton(parentElement, 'Изменить название книги', 'changeBookName', '');
   createButton(parentElement, 'Удалить книгу', 'deleteBook', choosedBook);
+  createButton(parentElement, 'Вернуться назад', 'showBook', '');
+  createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
 }
 
 function createBookButton(i, parentElement, isClickable) {
@@ -115,5 +128,20 @@ function deleteBook(i) {
       showBooks();
       saveFiles();
     }
+  }
+}
+
+function test(){
+  todayDate = new Date();
+  alert(todayDate.getTime())
+}
+
+function changeBookName() {
+  let bName = prompt('Введите новое название книги:', '');
+  if ((bName) && (bName != '')) {
+    bName.replace('	', '');
+    books[choosedBook][1] = bName;
+    saveFiles();
+    showBook();
   }
 }
