@@ -2,25 +2,40 @@ var APP_KEY = 'kj5lj89k7br0v46';
 var APP_SECRET = 'px68axwvij1w561';
 
 var REFRESH_TOKEN = localStorage.getItem('dbRefreshToken');
+console.log(REFRESH_TOKEN);
 var UID = localStorage.getItem('dbUID');
 
 mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 
-async function dbFileExists(folder, name) {
-    var dbx = new Dropbox.Dropbox({
-        clientId: APP_KEY,
-        clientSecret: APP_SECRET,
-        refreshToken: REFRESH_TOKEN
-    });
+async function dbFileExists(folder, name, dbx) {
+    // var dbx = new Dropbox.Dropbox({
+    //     clientId: APP_KEY,
+    //     clientSecret: APP_SECRET,
+    //     refreshToken: REFRESH_TOKEN
+    // });
+    console.log('dbFileExist dbx = ');
+    console.log(dbx);
     let length = 0;
+    console.log('folder = ' + folder + '; name = ' + name);
+    // await dbx.filesDownload({ path: folder + '/' + name })
+    //     .then(function (response) {
+    //         console.log('dbFileExist response = ');
+    //         console.log(response);
+    //         length = 1;
+    //     })
+    //     .catch(function (error) {
+    //         console.error(error.error || error);
+    //     })
     await dbx.filesSearch({ path: folder, query: name })
-        .then(function (response) {
-            length = response.result.matches.length;
-        })
-        .catch(function (error) {
-            console.error(error.error || error);
-        });
+       .then(async function (response) {
+           console.log('dbFileExist response = ');
+           console.log(response);
+           length = response.result.matches.length;
+       })
+       .catch(async function (error) {
+           console.error(error.error || error);
+       });
 
     if (length > 0) {
         return true;
@@ -30,14 +45,15 @@ async function dbFileExists(folder, name) {
 }
 
 async function dbDownloadStringArray(folder, name) {
-    var fileExists = await dbFileExists(folder, name);
-
-    if (fileExists) {
-        var dbx = new Dropbox.Dropbox({
+    var dbx = new Dropbox.Dropbox({
             clientId: APP_KEY,
             clientSecret: APP_SECRET,
             refreshToken: REFRESH_TOKEN
         });
+    var fileExists = await dbFileExists(folder, name, dbx);
+    console.log('file exists = ', fileExists);
+
+    if (fileExists) {
         let res = null;
         await dbx.filesDownload({ path: folder + '/' + name })
             .then(function (response) {
@@ -61,6 +77,8 @@ async function dbUploadStringArray(data, folder, name) {
         clientSecret: APP_SECRET,
         refreshToken: REFRESH_TOKEN
     });
+
+    console.log('UPLOAD DBX = ', dbx);
 
     let jointData = data.join('	');
     //let newFile = new Blob(jointData, { type: "text/plain" });
@@ -174,6 +192,7 @@ function mdaAddBook(bName, books, arrPrms) {
     books[l][0] = k;
     books[l][1] = bName;
     books[l][2] = (+(new Date())).toString();
+    return k;
     //console.log(books);
 }
 
@@ -368,7 +387,7 @@ function mdaCreateChapterButtonHTML(chapter, i) {
     }
 
     let out = '';
-    out += 'Глава ' + (i+1) + ' — ' + chapter[1] + lastChapter;
+    out += 'Глава ' + (i + 1) + ' — ' + chapter[1] + lastChapter;
     out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
     out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
     out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';

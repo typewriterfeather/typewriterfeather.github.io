@@ -19,16 +19,16 @@ function Exit() {
   }
 }
 
-async function findFiles() {
-  const finded = await dbFileExists('', 'books');
+async function test() {
+  const finded = await dbFileExists('', 'books.txt');
   console.log(finded);
 }
 
 async function readFiles() {
   let rawBooks = await dbDownloadStringArray('', 'books.txt');
-  console.log(rawBooks);
+  console.log('rawBooks = ' + rawBooks);
   books = mdaReadBooks(rawBooks, mdaBooksParams);
-  console.log(books);
+  console.log('books = ' + books);
 }
 
 async function readChapters() {
@@ -49,14 +49,20 @@ async function saveChapters() {
   dbUploadStringArray(mdaSaveBooks(chapters, mdaChaptersParams), '', choosedBook + '.txt');
 }
 
-function addBook() {
+async function addBook() {
   let bName = prompt('Введите название книги:', '');
   if ((bName) && (bName != '')) {
     bName.replace('	', '');
     mdaAddBook(bName, books, mdaBooksParams);
+    let k = await saveFiles();
+    chapters = [];
+    choosedChapter = k;
+
+    await saveChapters();
+    showBooks();
+
+    choosedChapter = -1;
   }
-  saveFiles();
-  showBooks();
 }
 
 function addChapter() {
@@ -64,9 +70,9 @@ function addChapter() {
   if ((cName) && (cName != '')) {
     cName.replace('	', '');
     mdaAddChapter(cName, chapters, mdaChaptersParams);
+    saveChapters();
+    showBook();
   }
-  saveChapters();
-  showBook();
 }
 
 function selectBook(n) {
@@ -198,11 +204,6 @@ function deleteChapter() {
       saveChapters();
     }
   }
-}
-
-function test() {
-  todayDate = new Date();
-  alert(todayDate.getTime())
 }
 
 function changeBookName() {
