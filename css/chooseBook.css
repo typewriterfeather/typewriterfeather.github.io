@@ -69,6 +69,8 @@ body {
   align-content: center;
   justify-content: space-around;
   overflow: auto;
+  flex-wrap: wrap;
+  column-gap: 0.5em;
 }
 
 .barnum {

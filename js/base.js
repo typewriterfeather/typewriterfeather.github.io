@@ -8,6 +8,51 @@ var UID = localStorage.getItem('dbUID');
 mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE'];
 
+{
+    // 0 - id
+    // 1 - N название
+    // 2 - D дата создания
+    // 3 - DS дата последнего сохранения
+    // 4 - LC последний редактированная глава
+    // 5 - LCN название этой главы
+    // 6 - LTZ Число слов последней главы
+    // 7 - LTF Число слов, которое было при постановке цели
+    // 8 - LTS Число слов, которое нужно набрать
+    // 9 - LTDB Дата постановки цели
+    // 10 - LTDE Дата окончания цели
+    // 11 - LTLF Тоже лоя цели, только на большее время
+    // 12 - LTLS
+    // 13 - LTLB
+    // 14 - LTLE
+}
+
+function structDate(date) {
+    let creationDate;
+    if (date != undefined) {
+        creationDate = new Date(date);
+    } else {
+        creationDate = new Date();
+    }
+    let creationDateS = mdaDateAddZero(creationDate.getDate()) + '.' + mdaDateAddZero(creationDate.getMonth() + 1) + '.' + creationDate.getFullYear();
+    return creationDateS;
+}
+
+function structTime(date) {
+    let creationDate;
+    if (date != undefined) {
+        creationDate = new Date(date);
+    } else {
+        creationDate = new Date();
+    }
+    let creationDateS = mdaDateAddZero(creationDate.getHours()) + ':' + mdaDateAddZero(creationDate.getMinutes()) + ':' + mdaDateAddZero(creationDate.getSeconds());
+    return creationDateS;
+}
+
+function structDateTime(date) {
+    let creationDateS = structDate(date) + ' ' + structTime(date);
+    return creationDateS;
+}
+
 async function dbFileExists(folder, name, dbx) {
     // var dbx = new Dropbox.Dropbox({
     //     clientId: APP_KEY,
@@ -28,14 +73,14 @@ async function dbFileExists(folder, name, dbx) {
     //         console.error(error.error || error);
     //     })
     await dbx.filesSearch({ path: folder, query: name })
-       .then(async function (response) {
-           console.log('dbFileExist response = ');
-           console.log(response);
-           length = response.result.matches.length;
-       })
-       .catch(async function (error) {
-           console.error(error.error || error);
-       });
+        .then(async function (response) {
+            console.log('dbFileExist response = ');
+            console.log(response);
+            length = response.result.matches.length;
+        })
+        .catch(async function (error) {
+            console.error(error.error || error);
+        });
 
     if (length > 0) {
         return true;
@@ -44,30 +89,34 @@ async function dbFileExists(folder, name, dbx) {
     }
 }
 
-async function dbDownloadStringArray(folder, name) {
-    var dbx = new Dropbox.Dropbox({
+async function dbDownloadStringArray(folder, name, dbxin) {
+    var dbx;
+    if (!dbxin) {
+        console.log('Создаю DBX!');
+        dbx = new Dropbox.Dropbox({
             clientId: APP_KEY,
             clientSecret: APP_SECRET,
             refreshToken: REFRESH_TOKEN
         });
-    var fileExists = await dbFileExists(folder, name, dbx);
-    console.log('file exists = ', fileExists);
+    } else {
+        dbx = dbxin;
+    }
 
-    if (fileExists) {
-        let res = null;
-        await dbx.filesDownload({ path: folder + '/' + name })
-            .then(function (response) {
-                res = response.result.fileBlob;
-            })
-            .catch(function (error) {
-                console.error(error.error || error);
-            })
+    let res = null;
+    await dbx.filesDownload({ path: folder + '/' + name })
+        .then(function (response) {
+            res = response.result.fileBlob;
+        })
+        .catch(function (error) {
+            console.error(error.error || error);
+        })
 
+    if (res == null) {
+        return null;
+    } else {
         var tex = await res.text();
         var tex1 = tex.split('	');
         return tex1;
-    } else {
-        return null;
     }
 }
 
@@ -192,6 +241,8 @@ function mdaAddBook(bName, books, arrPrms) {
     books[l][0] = k;
     books[l][1] = bName;
     books[l][2] = (+(new Date())).toString();
+    books[l][3] = books[l][2];
+
     return k;
     //console.log(books);
 }
@@ -218,22 +269,27 @@ function mdaAddChapter(cName, chapters, arrPrms) {
     chapters[l][0] = k;
     chapters[l][1] = cName;
     chapters[l][2] = (+(new Date())).toString();
+    chapters[l][3] = chapters[l][2];
     //console.log(chapters);
 }
 
 function mdaCreateBookButtonHTML(book, i) {
     let creationDateS = 'не задано.';
+    let creationTimeS = '';
     let editDateS = 'не задано.';
+    let editTimeS = '';
     let lastChapter = '';
 
     if (book[2]) {
-        let creationDate = new Date(parseInt(book[2]));
-        creationDateS = mdaDateAddZero(creationDate.getDay()) + '.' + mdaDateAddZero(creationDate.getMonth()) + '.' + creationDate.getFullYear();
+        let getDate = parseInt(book[2]);
+        creationDateS = structDate(getDate) + ' ';
+        creationTimeS = structTime(getDate);
     }
 
     if (book[3]) {
-        let editDate = new Date(parseInt(book[3]));
-        editDateS = mdaDateAddZero(editDate.getDay()) + '.' + mdaDateAddZero(editDate.getMonth()) + '.' + editDate.getFullYear();
+        let getDate = parseInt(book[3]);
+        editDateS = structDate(getDate) + ' ';
+        editTimeS = structTime(getDate);
     }
 
     if (book[4]) {
@@ -304,31 +360,27 @@ function mdaCreateBookButtonHTML(book, i) {
     out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
     out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
     out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
-    out += '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: ' + editDateS + '</div></div>';
+    out += '<div class="dates"><div class="dates"><div>Созд.: ' + creationDateS + '</div> <div>' + creationTimeS + '</div></div><div class="dates"><div>Ред.: ' + editDateS + '</div> <div>' + editTimeS + '</div></div></div>';
 
     return out;
 }
 
 function mdaCreateChapterButtonHTML(chapter, i) {
     let creationDateS = 'не задано.';
+    let creationTimeS = '';
     let editDateS = 'не задано.';
-    let lastChapter = '';
+    let editTimeS = '';
 
     if (chapter[2]) {
-        let creationDate = new Date(parseInt(chapter[2]));
-        creationDateS = mdaDateAddZero(creationDate.getDay()) + '.' + mdaDateAddZero(creationDate.getMonth()) + '.' + creationDate.getFullYear();
+        let getDate = parseInt(chapter[2]);
+        creationDateS = structDate(getDate) + ' ';
+        creationTimeS = structTime(getDate);
     }
 
     if (chapter[3]) {
-        let editDate = new Date(parseInt(chapter[3]));
-        editDateS = mdaDateAddZero(editDate.getDay()) + '.' + mdaDateAddZero(editDate.getMonth()) + '.' + editDate.getFullYear();
-    }
-
-    if (chapter[4]) {
-        lastChapter = '<br>Глава ' + chapter[4];
-        if (chapter[5]) {
-            lastChapter += ' — ' + chapter[5];
-        }
+        let getDate = parseInt(chapter[3]);
+        editDateS = structDate(getDate) + ' ';
+        editTimeS = structTime(getDate);
     }
 
     let todayDate = new Date();
@@ -387,12 +439,12 @@ function mdaCreateChapterButtonHTML(chapter, i) {
     }
 
     let out = '';
-    out += 'Глава ' + (i + 1) + ' — ' + chapter[1] + lastChapter;
+    out += 'Глава ' + (i + 1) + ' — ' + chapter[1];
     out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
     out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
     out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
     out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
-    out += '<div class="dates"><div>Созд.: ' + creationDateS + '</div><div>Ред.: ' + editDateS + '</div></div>';
+    out += '<div class="dates"><div class="dates"><div>Созд.: ' + creationDateS + '</div> <div>' + creationTimeS + '</div></div><div class="dates"><div>Ред.: ' + editDateS + '</div> <div>' + editTimeS + '</div></div></div>';
 
     return out;
 }

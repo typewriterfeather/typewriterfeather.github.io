@@ -7,7 +7,13 @@ var choosedChapter = -1;
 //var books = ['1', '1', '1N', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', '2', '2N', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', '4', '4N', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', '7', '7N', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
 
 window.onload = async function () {
-  await readFiles();
+  let dbx = await new Dropbox.Dropbox({
+    clientId: APP_KEY,
+    clientSecret: APP_SECRET,
+    refreshToken: REFRESH_TOKEN
+  });
+  await readFiles(dbx);
+  await readChapters(dbx);
   showBooks();
 }
 
@@ -20,24 +26,32 @@ function Exit() {
 }
 
 async function test() {
-  const finded = await dbFileExists('', 'books.txt');
-  console.log(finded);
+  let creationDateS = structDateTime();
+  alert(creationDateS);
 }
 
-async function readFiles() {
-  let rawBooks = await dbDownloadStringArray('', 'books.txt');
-  console.log('rawBooks = ' + rawBooks);
+async function readFiles(dbxin) {
+  let rawBooks = await dbDownloadStringArray('', 'books.txt', dbxin);
+  console.log('RawBooks:');
+  console.log(rawBooks);
   books = mdaReadBooks(rawBooks, mdaBooksParams);
-  console.log('books = ' + books);
+  console.log('books:');
+  console.log(books);
 }
 
-async function readChapters() {
-  if (readedChaptersFromBook != choosedBook) {
-    readedChaptersFromBook = choosedBook;
-    let rawChapters = await dbDownloadStringArray('', choosedBook + '.txt');
+async function readChapters(dbxin) {
+  console.log('Загрузка глав!');
+  chapters = [];
+  chapters.length = books.length;
+  for (let i = 0; i < books.length; i++) {
+    chapters[i] = [];
+    console.log(books[i][0] + '.txt');
+    let rawChapters = await dbDownloadStringArray('', books[i][0] + '.txt', dbxin);
+    console.log('rawChapters');
     console.log(rawChapters);
-    chapters = mdaReadBooks(rawChapters, mdaChaptersParams);
-    console.log(chapters);
+    chapters[i] = mdaReadBooks(rawChapters, mdaChaptersParams);
+    console.log('chapters[i]');
+    console.log(chapters[i]);
   }
 }
 
@@ -46,7 +60,7 @@ async function saveFiles() {
 }
 
 async function saveChapters() {
-  dbUploadStringArray(mdaSaveBooks(chapters, mdaChaptersParams), '', choosedBook + '.txt');
+  dbUploadStringArray(mdaSaveBooks(chapters[choosedBook], mdaChaptersParams), '', books[choosedBook][0] + '.txt');
 }
 
 async function addBook() {
@@ -54,14 +68,15 @@ async function addBook() {
   if ((bName) && (bName != '')) {
     bName.replace('	', '');
     mdaAddBook(bName, books, mdaBooksParams);
-    let k = await saveFiles();
-    chapters = [];
-    choosedChapter = k;
+    await saveFiles();
+    let k = books.length - 1;
+    chapters[k] = [];
+    choosedBook = k;
 
     await saveChapters();
     showBooks();
 
-    choosedChapter = -1;
+    choosedBook = -1;
   }
 }
 
@@ -69,7 +84,7 @@ function addChapter() {
   let cName = prompt('Введите название главы:', '');
   if ((cName) && (cName != '')) {
     cName.replace('	', '');
-    mdaAddChapter(cName, chapters, mdaChaptersParams);
+    mdaAddChapter(cName, chapters[choosedBook], mdaChaptersParams);
     saveChapters();
     showBook();
   }
@@ -106,7 +121,6 @@ function hideBooks() {
 }
 
 async function showBook() {
-  await readChapters();
   setTitle('Список глав')
   const parentElement = document.getElementById('books');
   hideBooks();
@@ -114,7 +128,7 @@ async function showBook() {
   createButton(parentElement, 'Настройки книги', 'showBookSettings', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
   createButton(parentElement, 'СОДЕРЖАНИЕ', '', '');
-  for (let i = 0; i < chapters.length; i++) {
+  for (let i = 0; i < chapters[choosedBook].length; i++) {
     createChapterButton(i, parentElement, true)
   }
   createButton(parentElement, 'Добавить главу', 'addChapter', '');
@@ -156,7 +170,7 @@ function createBookButton(i, parentElement, isClickable) {
 }
 
 function createChapterButton(i, parentElement, isClickable) {
-  const chapter = chapters[i];
+  const chapter = chapters[choosedBook][i];
   const btn = document.createElement("button");
   btn.innerHTML = mdaCreateChapterButtonHTML(chapter, i);
   btn.setAttribute('class', 'buttonBook');
@@ -188,8 +202,12 @@ function deleteBook(i) {
     let confirmDelete = confirm('Вы точно уверены, что хотите удалить книгу "' + books[i][1] + '"? Книга будет удалена навсегда!!!');
     if (confirmDelete) {
       books.splice(i, 1);
+      chapters.splice(i, 1);
       showBooks();
       saveFiles();
+      if (choosedChapter >= 0) {
+        choosedBook -= 1;
+      }
     }
   }
 }
@@ -199,9 +217,9 @@ function deleteChapter() {
   if (confirmDelete) {
     let confirmDelete = confirm('Вы точно уверены, что хотите удалить Главу ' + (choosedChapter + 1) + '—' + chapters[choosedChapter][1] + '? Глава будет удалена навсегда!!!');
     if (confirmDelete) {
-      chapters.splice(choosedChapter, 1);
+      chapters[choosedBook].splice(choosedChapter, 1);
       showBook();
-      saveChapters();
+      saveFiles();
     }
   }
 }
