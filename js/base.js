@@ -136,15 +136,18 @@ async function dbDownloadStringArrays(folder, name, dbxin) {
     }
 
     let res = null;
+    let reser = null;
     await dbx.filesDownload({ path: folder + '/' + name })
         .then(function (response) {
             res = response.result.fileBlob;
         })
         .catch(function (error) {
             console.error(error.error || error);
+            //log('ERROR', error.toString())
+            reser = error.toString();
         })
-    if (res == null) {
-        return res;
+    if (reser != null) {
+        return reser;
     } else {
         let tex = await res.text();
         return tex;
@@ -234,16 +237,20 @@ async function dbUploadStringArrays(jointData, folder, name, dbxin) {
 
     console.log('UPLOAD DBX = ', dbx);
 
-    dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
+    let res;
+
+    await dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
         .then(function (response) {
             console.log('Массив строк загружен');
             console.log(response);
-            return true;
+            res = true;
         })
         .catch(function (error) {
             console.error(error.error || error);
-            return false;
+            res = false;
         });
+
+        return res;
 }
 
 function mdaFindParamI(arr, n, param) { //My Data Array
@@ -728,4 +735,10 @@ function clampNumber(val, min, max) {
 function log(text, prm) {
     console.log(structTime() + ' ' + text + ':');
     console.log(prm);
+}
+
+function clearLocalStorage() {
+    localStorage.clear();
+    localStorage.setItem('dbRefreshToken', REFRESH_TOKEN);
+    localStorage.setItem('dbUID', UID);
 }

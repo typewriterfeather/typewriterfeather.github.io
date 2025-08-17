@@ -10,7 +10,7 @@ var onlineStatus = false;
 //var books = ['1', '1', '1N', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', '2', '2N', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', '4', '4N', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', '7', '7N', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
 
 async function test() {
-  updateFiles(dbx);
+  clearLocalStorage();
 }
 
 function test1(arr) {
@@ -48,8 +48,9 @@ function Exit() {
 
 async function updateFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
+  log('rawReadedFilesOnline', rawReadedFilesOnline);
 
-  if (rawReadedFilesOnline == null) {
+  if (rawReadedFilesOnline == 'TypeError: Failed to fetch') {
     onlineStatus = false;
   } else {
     onlineStatus = true;
@@ -57,18 +58,22 @@ async function updateFiles(dbxin) {
 
   log('ONLINE', onlineStatus);
 
-  if (!onlineStatus) {
-    let bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
-    bac = bacoff;
+  let bacoff;
+  if (bac.length > 0) {
+    bacoff = bac;
   } else {
-    let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
-    let bacoff;
-    if (bac.length > 0) {
-      bacoff = bac;
-    } else {
-      let rawReadedFilesOffline = localStorage.getItem('bac');
-      bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+    let rawReadedFilesOffline = localStorage.getItem('bac');
+    bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+  }
+
+  if (!onlineStatus) {
+    bac = bacoff;
+    saveBac(true, false);
+  } else {
+    if (rawReadedFilesOnline == 'DropboxResponseError: Response failed with a 409 code') {
+      rawReadedFilesOnline = '';
     }
+    let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
 
     //log('bacoff', bacoff);
 
@@ -90,6 +95,7 @@ async function updateFiles(dbxin) {
           if (b1[3] != b1[15]) {
             // Если нет конфликта и файл обновился на устройстве
             decision[i][0] = 1;
+            b1[3] = b1[15];
             //uploadBooks.push(b1);
           } else {
             // Если нет конфликта и файл не обновлялся
@@ -108,6 +114,7 @@ async function updateFiles(dbxin) {
             //downloadBooks.push(b0);
           } else {
             decision[i][0] = 1;
+            b1[3] = b1[15];
             //uploadBooks.push(b1);
           }
         }
@@ -120,6 +127,7 @@ async function updateFiles(dbxin) {
         // Если файл есть только на устройстве
         log('Upload BOOK', b1)
         decision[i][0] = 1;
+        b1[3] = b1[15];
         //uploadBooks.push(b1);
       }
       for (let j = 1; j < comp[i].length; j++) {
@@ -131,6 +139,7 @@ async function updateFiles(dbxin) {
             if (c1[3] != c1[15]) {
               // Если нет конфликта и файл обновился на устройстве
               decision[i][j] = 1;
+              c1[3] = c1[15];
               uploadBooks.push([b1, c1]);
             } else {
               // Если нет конфликта и файл не обновлялся
@@ -149,6 +158,7 @@ async function updateFiles(dbxin) {
               downloadBooks.push([b0, c0]);
             } else {
               decision[i][j] = 1;
+              c1[3] = c1[15];
               uploadBooks.push([b1, c1]);
             }
           }
@@ -161,6 +171,7 @@ async function updateFiles(dbxin) {
           // Если файл есть только на устройстве
           log('Upload', c1)
           decision[i][j] = 1;
+          c1[3] = c1[15];
           uploadBooks.push([b1, c1]);
         }
       }
@@ -172,16 +183,17 @@ async function updateFiles(dbxin) {
     log('downloadBooks', downloadBooks);
 
     for (let i = 0; i < uploadBooks.length; i++) {
-      let name = uploadBooks[i][0] + '_' + uploadBooks[i][1];
+      let name = uploadBooks[i][0][0] + '_' + uploadBooks[i][1][0];
       let dataText = localStorage.getItem(name);
       let condition = await dbUploadStringArrays(dataText, '', name, dbx);
       if (!condition) {
         connectionLost = true;
       }
     }
-
+    log('connectionLost on upload', await connectionLost);
+    connectionLost = false;
     for (let i = 0; i < downloadBooks.length; i++) {
-      let name = downloadBooks[i][0] + '_' + downloadBooks[i][1];
+      let name = downloadBooks[i][0][0] + '_' + downloadBooks[i][1][0];
       let dataText = await dbDownloadStringArrays('', name, dbx);
       if (dataText == null) {
         connectionLost = true;
@@ -189,6 +201,8 @@ async function updateFiles(dbxin) {
         localStorage.setItem(name, dataText);
       }
     }
+
+    log('connectionLost on download', connectionLost);
 
     let rawBac = [];
 
@@ -203,17 +217,23 @@ async function updateFiles(dbxin) {
 
     bac = rawBac;
 
-    let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
-    await dbUploadStringArrays(filesToSave, '', 'books.txt', dbx);
-    localStorage.setItem('bac', filesToSave);
+    saveBac(true, true);
 
     // if (!connectionLost) {
     //   bac = rawBac;
     // } else {
     //   //location.reload();
     // }
+  }
+}
 
-    log('connectionLost', connectionLost);
+async function saveBac(toLocal, toGlobal) {
+  let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
+  if (toLocal) {
+    localStorage.setItem('bac', filesToSave);
+  }
+  if (toGlobal) {
+    await dbUploadStringArrays(filesToSave, '', 'books.txt', dbx);
   }
 }
 
@@ -332,6 +352,7 @@ function showBooks() {
   setTitle('Список книг');
   const parentElement = document.getElementById('books');
   hideBooks();
+  log('bac', bac);
   for (let i = 0; i < bac.length; i++) {
     createBookButton(i, parentElement, true, false);
   }
