@@ -33,7 +33,7 @@ window.onload = async function () {
   //await updateFiles(dbx);
   //await readFiles(dbx);
   await updateFiles(dbx);
-  log('ONLINE = ', onlineStatus);
+  //log('ONLINE = ', onlineStatus);
   //await readChapters(dbx);
   showBooks();
 }
@@ -48,7 +48,7 @@ function Exit() {
 
 async function updateFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
-  log('rawReadedFilesOnline', rawReadedFilesOnline);
+  //log('rawReadedFilesOnline', rawReadedFilesOnline);
 
   if (rawReadedFilesOnline == 'TypeError: Failed to fetch') {
     onlineStatus = false;
@@ -78,7 +78,7 @@ async function updateFiles(dbxin) {
     //log('bacoff', bacoff);
 
     let comp = mdaBacCompare(bacon, bacoff);
-    log('comp', comp);
+    //log('comp', comp);
 
     let uploadBooks = [];
     let downloadBooks = [];
@@ -89,92 +89,122 @@ async function updateFiles(dbxin) {
       decision[i] = [];
       let b0 = comp[i][0][0];
       let b1 = comp[i][0][1];
+
       if (b0 && b1) {
-        log('Сравнить BOOK', b0 + ' ' + b1);
-        if (b0[3] == b1[3]) {
-          if (b1[3] != b1[15]) {
-            // Если нет конфликта и файл обновился на устройстве
-            decision[i][0] = 1;
-            b1[3] = b1[15];
-            //uploadBooks.push(b1);
-          } else {
-            // Если нет конфликта и файл не обновлялся
-            decision[i][0] = 0;
-          }
-        } else if (b1[3] == b1[15]) {
-          // Если нет конфликта и файл обновился на сервере
+        b0[16] = mdaStringReplaceChar(b0[16], 0, b1[16][0]);
+        if (b1[16][0] == '0') {
+          //log('Не РЕдактируется:', b1[1]);
           decision[i][0] = 0;
-          //downloadBooks.push(b0);
+          // if ((b1[3]) && (b1[15])) {
+          //   localStorage.removeItem(b0[0] + '_' + c0[0]);
+          // }
+          b0[3] = 0;
+          b0[15] = 0;
+
         } else {
-          // Если есть конфликт                           TODO TODO
-          log('Конфликт в книге:', b0[1] + '/' + b1[1]);
-          if (b0[3] > b1[3]) {
-            // Сохраняется более свежий файл!
+          //log('Сравнить BOOK', b0 + ' ' + b1);
+          if (b0[3] == b1[3]) {
+            if (b1[3] != b1[15]) {
+              // Если нет конфликта и файл обновился на устройстве
+              decision[i][0] = 1;
+              b1[3] = b1[15];
+              //uploadBooks.push(b1);
+            } else {
+              // Если нет конфликта и файл не обновлялся
+              decision[i][0] = 0;
+            }
+          } else if (b1[3] == b1[15]) {
+            // Если нет конфликта и файл обновился на сервере
             decision[i][0] = 0;
             //downloadBooks.push(b0);
           } else {
-            decision[i][0] = 1;
-            b1[3] = b1[15];
-            //uploadBooks.push(b1);
+            // Если есть конфликт                           TODO TODO
+            //log('Конфликт в книге:', b0[1] + '/' + b1[1]);
+            if (b0[3] > b1[3]) {
+              // Сохраняется более свежий файл!
+              decision[i][0] = 0;
+              //downloadBooks.push(b0);
+            } else {
+              decision[i][0] = 1;
+              b1[3] = b1[15];
+              //uploadBooks.push(b1);
+            }
           }
         }
       } else if (b0) {
         // Если файл есть только на сервере
-        log('Download BOOK', b0)
+        //log('Download BOOK', b0);
+        b0[16] = mdaStringReplaceChar(b0[16], 0, 0);
         decision[i][0] = 0;
         //downloadBooks.push(b0);
       } else {
         // Если файл есть только на устройстве
-        log('Upload BOOK', b1)
+        //log('Upload BOOK', b1)
         decision[i][0] = 1;
         b1[3] = b1[15];
         //uploadBooks.push(b1);
       }
+      
       for (let j = 1; j < comp[i].length; j++) {
         let c0 = comp[i][j][0];
         let c1 = comp[i][j][1];
         if (c0 && c1) {
-          log('Сравнить', c0 + ' ' + c1);
-          if (c0[3] == c1[3]) {
-            if (c1[3] != c1[15]) {
-              // Если нет конфликта и файл обновился на устройстве
-              decision[i][j] = 1;
-              c1[3] = c1[15];
-              uploadBooks.push([b1, c1]);
-            } else {
-              // Если нет конфликта и файл не обновлялся
-              decision[i][j] = 0;
-            }
-          } else if (b1[3] == b1[15]) {
-            // Если нет конфликта и файл обновился на сервере
+          c0[16] = mdaStringReplaceChar(c0[16], 0, c1[16][0]);
+          if (b1[16][0] == '0') {
+            //log('Не РЕдактируется:', b1[1]);
+
             decision[i][j] = 0;
-            downloadBooks.push([b0, c0]);
+            c0[16] = mdaStringReplaceChar(c0[16], 0, 0);
+            localStorage.removeItem(b0[0] + '_' + c0[0]);
+            c0[3] = 0;
+            c0[15] = 0;
+
           } else {
-            // Если есть конфликт                           TODO TODO
-            log('Конфликт в книге:', b0[1] + '/' + b1[1] + ' - ' + c0[1] + '/' + c1[1]);
-            if (c0[3] > c1[3]) {
-              // Сохраняется более свежий файл!
+            //log('Сравнить', c0 + ' ' + c1);
+            if (c0[3] == c1[3]) {
+              if (c1[3] != c1[15]) {
+                // Если нет конфликта и файл обновился на устройстве
+                decision[i][j] = 1;
+                c1[3] = c1[15];
+                uploadBooks.push([b1, c1]);
+              } else {
+                // Если нет конфликта и файл не обновлялся
+                decision[i][j] = 0;
+              }
+            } else if (b1[3] == b1[15]) {
+              // Если нет конфликта и файл обновился на сервере
               decision[i][j] = 0;
               downloadBooks.push([b0, c0]);
             } else {
-              decision[i][j] = 1;
-              c1[3] = c1[15];
-              uploadBooks.push([b1, c1]);
+              // Если есть конфликт                           TODO TODO
+              //log('Конфликт в книге:', b0[1] + '/' + b1[1] + ' - ' + c0[1] + '/' + c1[1]);
+              if (c0[3] > c1[3]) {
+                // Сохраняется более свежий файл!
+                decision[i][j] = 0;
+                downloadBooks.push([b0, c0]);
+              } else {
+                decision[i][j] = 1;
+                c1[3] = c1[15];
+                uploadBooks.push([b1, c1]);
+              }
             }
           }
         } else if (c0) {
           // Если файл есть только на сервере
-          log('Download', c0)
+          //log('Download', c0)
+          c0[16] = mdaStringReplaceChar(c0[16], 0, 0);
           decision[i][j] = 0;
-          downloadBooks.push([b0, c0]);
+          //downloadBooks.push([b0, c0]);
         } else {
           // Если файл есть только на устройстве
-          log('Upload', c1)
+          //log('Upload', c1)
           decision[i][j] = 1;
           c1[3] = c1[15];
           uploadBooks.push([b1, c1]);
         }
+
       }
+
     }
 
     let connectionLost = false;
@@ -190,8 +220,8 @@ async function updateFiles(dbxin) {
         connectionLost = true;
       }
     }
-    log('connectionLost on upload', await connectionLost);
-    connectionLost = false;
+    //log('connectionLost on upload', await connectionLost);
+    //connectionLost = false;
     for (let i = 0; i < downloadBooks.length; i++) {
       let name = downloadBooks[i][0][0] + '_' + downloadBooks[i][1][0];
       let dataText = await dbDownloadStringArrays('', name, dbx);
@@ -202,7 +232,7 @@ async function updateFiles(dbxin) {
       }
     }
 
-    log('connectionLost on download', connectionLost);
+    log('connectionLost', connectionLost);
 
     let rawBac = [];
 
@@ -352,7 +382,7 @@ function showBooks() {
   setTitle('Список книг');
   const parentElement = document.getElementById('books');
   hideBooks();
-  log('bac', bac);
+  //log('bac', bac);
   for (let i = 0; i < bac.length; i++) {
     createBookButton(i, parentElement, true, false);
   }
@@ -364,12 +394,37 @@ function hideBooks() {
   parentElement.replaceChildren();
 }
 
+async function startBookEditing() {
+  hideBooks();
+  setTitle('Обновление...');
+  bac[choosedBook][0][16] = mdaStringReplaceChar(bac[choosedBook][0][16], 0, 1);
+  await updateFiles(dbx);
+  showBook();
+}
+
+async function stopBookEditing() {
+  hideBooks();
+  setTitle('Обновление...');
+  if (bac[choosedBook][0][3] == bac[choosedBook][0][15]) {
+    bac[choosedBook][0][16] = mdaStringReplaceChar(bac[choosedBook][0][16], 0, 0);
+    await updateFiles(dbx);
+    showBook();
+  } else {
+    alert('Нельзя перестать редактировать книгу, пока она не синхронизированна с сервером!');
+  }
+}
+
 async function showBook() {
   setTitle('Список глав')
   const parentElement = document.getElementById('books');
   hideBooks();
   createBookButton(choosedBook, parentElement, false);
   createButton(parentElement, 'Настройки книги', 'showBookSettings', '');
+  if (bac[choosedBook][0][16][0] == '0') {
+    createButton(parentElement, 'Редактировать книгу', 'startBookEditing', '');
+  } else {
+    createButton(parentElement, 'Перестать редактировать книгу', 'stopBookEditing', '');
+  }
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
   createButton(parentElement, 'СОДЕРЖАНИЕ', '', '');
   if (bac[choosedBook]) {

@@ -235,14 +235,14 @@ async function dbUploadStringArrays(jointData, folder, name, dbxin) {
         dbx = dbxin;
     }
 
-    console.log('UPLOAD DBX = ', dbx);
+    //console.log('UPLOAD DBX = ', dbx);
 
     let res;
 
     await dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
         .then(function (response) {
-            console.log('Массив строк загружен');
-            console.log(response);
+            //console.log('Массив строк загружен');
+            //console.log(response);
             res = true;
         })
         .catch(function (error) {
@@ -490,7 +490,7 @@ function mdaSaveBooksAndChapters(bac) {
             }
         }
     }
-    console.log(arro);
+    //console.log(arro);
     return arro;
 }
 
@@ -508,7 +508,7 @@ function mdaAddBook(bName, bac, arrPrms) {
     bac[l][0][2] = bac[l][0][0];
     bac[l][0][3] = 0;
     bac[l][0][15] = bac[l][0][2];
-    bac[l][0][16] = '10';
+    bac[l][0][16] = '00';
 }
 
 
@@ -521,7 +521,7 @@ function mdaAddChapter(cName, book) {
     book[l][2] = book[l][0];
     book[l][3] = 0;
     book[l][15] = book[l][0];
-    book[l][16] = '10';
+    book[l][16] = '00';
 
     localStorage.setItem(book[0][0] + '_' + book[l][0], 'TEXT: ' + book[0][0] + '_' + book[l][0]);
 }
