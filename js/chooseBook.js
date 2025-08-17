@@ -48,7 +48,6 @@ function Exit() {
 
 async function updateFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
-  let rawReadedFilesOffline = localStorage.getItem('bac');
 
   if (rawReadedFilesOnline == null) {
     onlineStatus = false;
@@ -63,7 +62,13 @@ async function updateFiles(dbxin) {
     bac = bacoff;
   } else {
     let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
-    let bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+    let bacoff;
+    if (bac.length > 0) {
+      bacoff = bac;
+    } else {
+      let rawReadedFilesOffline = localStorage.getItem('bac');
+      bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+    }
 
     //log('bacoff', bacoff);
 
@@ -72,23 +77,143 @@ async function updateFiles(dbxin) {
 
     let uploadBooks = [];
     let downloadBooks = [];
-    let conflictBooks = [];
+    //let conflictBooks = [];
+    let decision = [];
 
     for (let i = 0; i < comp.length; i++) {
-      for (let j = 0; j < comp[i].length; j++) {
+      decision[i] = [];
+      let b0 = comp[i][0][0];
+      let b1 = comp[i][0][1];
+      if (b0 && b1) {
+        log('Сравнить BOOK', b0 + ' ' + b1);
+        if (b0[3] == b1[3]) {
+          if (b1[3] != b1[15]) {
+            // Если нет конфликта и файл обновился на устройстве
+            decision[i][0] = 1;
+            //uploadBooks.push(b1);
+          } else {
+            // Если нет конфликта и файл не обновлялся
+            decision[i][0] = 0;
+          }
+        } else if (b1[3] == b1[15]) {
+          // Если нет конфликта и файл обновился на сервере
+          decision[i][0] = 0;
+          //downloadBooks.push(b0);
+        } else {
+          // Если есть конфликт                           TODO TODO
+          log('Конфликт в книге:', b0[1] + '/' + b1[1]);
+          if (b0[3] > b1[3]) {
+            // Сохраняется более свежий файл!
+            decision[i][0] = 0;
+            //downloadBooks.push(b0);
+          } else {
+            decision[i][0] = 1;
+            //uploadBooks.push(b1);
+          }
+        }
+      } else if (b0) {
+        // Если файл есть только на сервере
+        log('Download BOOK', b0)
+        decision[i][0] = 0;
+        //downloadBooks.push(b0);
+      } else {
+        // Если файл есть только на устройстве
+        log('Upload BOOK', b1)
+        decision[i][0] = 1;
+        //uploadBooks.push(b1);
+      }
+      for (let j = 1; j < comp[i].length; j++) {
         let c0 = comp[i][j][0];
         let c1 = comp[i][j][1];
         if (c0 && c1) {
           log('Сравнить', c0 + ' ' + c1);
+          if (c0[3] == c1[3]) {
+            if (c1[3] != c1[15]) {
+              // Если нет конфликта и файл обновился на устройстве
+              decision[i][j] = 1;
+              uploadBooks.push([b1, c1]);
+            } else {
+              // Если нет конфликта и файл не обновлялся
+              decision[i][j] = 0;
+            }
+          } else if (b1[3] == b1[15]) {
+            // Если нет конфликта и файл обновился на сервере
+            decision[i][j] = 0;
+            downloadBooks.push([b0, c0]);
+          } else {
+            // Если есть конфликт                           TODO TODO
+            log('Конфликт в книге:', b0[1] + '/' + b1[1] + ' - ' + c0[1] + '/' + c1[1]);
+            if (c0[3] > c1[3]) {
+              // Сохраняется более свежий файл!
+              decision[i][j] = 0;
+              downloadBooks.push([b0, c0]);
+            } else {
+              decision[i][j] = 1;
+              uploadBooks.push([b1, c1]);
+            }
+          }
         } else if (c0) {
-          log('Скачать', c0)
+          // Если файл есть только на сервере
+          log('Download', c0)
+          decision[i][j] = 0;
+          downloadBooks.push([b0, c0]);
         } else {
-          log('Загрузить', c1)
-        }     
+          // Если файл есть только на устройстве
+          log('Upload', c1)
+          decision[i][j] = 1;
+          uploadBooks.push([b1, c1]);
+        }
       }
     }
 
-    bac = bacon;
+    let connectionLost = false;
+
+    log('uploadBooks', uploadBooks);
+    log('downloadBooks', downloadBooks);
+
+    for (let i = 0; i < uploadBooks.length; i++) {
+      let name = uploadBooks[i][0] + '_' + uploadBooks[i][1];
+      let dataText = localStorage.getItem(name);
+      let condition = await dbUploadStringArrays(dataText, '', name, dbx);
+      if (!condition) {
+        connectionLost = true;
+      }
+    }
+
+    for (let i = 0; i < downloadBooks.length; i++) {
+      let name = downloadBooks[i][0] + '_' + downloadBooks[i][1];
+      let dataText = await dbDownloadStringArrays('', name, dbx);
+      if (dataText == null) {
+        connectionLost = true;
+      } else {
+        localStorage.setItem(name, dataText);
+      }
+    }
+
+    let rawBac = [];
+
+    for (let i = 0; i < comp.length; i++) {
+      rawBac[i] = [];
+      for (let j = 0; j < comp[i].length; j++) {
+        rawBac[i][j] = comp[i][j][decision[i][j]];
+      }
+    }
+
+    log('rawBac', rawBac);
+
+    bac = rawBac;
+
+    let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
+    await dbUploadStringArrays(filesToSave, '', 'books.txt', dbx);
+    localStorage.setItem('bac', filesToSave);
+
+    // if (!connectionLost) {
+    //   bac = rawBac;
+    // } else {
+    //   //location.reload();
+    // }
+
+    log('connectionLost', connectionLost);
   }
 }
 
@@ -150,15 +275,13 @@ async function readFiles(dbxin) {
 // }
 
 async function saveFiles() {
-  //dbUploadStringArray(mdaSaveBooks(books, mdaBooksParams), '', 'books.txt');
-  let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
-  await dbUploadStringArrays(filesToSave, '', 'books.txt');
-  localStorage.setItem('bac', filesToSave);
+  await updateFiles(dbx);
+
+  // let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
+  // await dbUploadStringArrays(filesToSave, '', 'books.txt', dbx);
+  // localStorage.setItem('bac', filesToSave);
 }
 
-// async function saveChapters() {
-//   dbUploadStringArray(mdaSaveBooks(chapters[choosedBook], mdaChaptersParams), '', books[choosedBook][0] + '.txt');
-// }
 
 async function addBook() {
   let bName = prompt('Введите название книги:', '');

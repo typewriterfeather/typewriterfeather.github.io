@@ -123,7 +123,7 @@ async function dbDownloadStringArray(folder, name, dbxin) {
 }
 
 async function dbDownloadStringArrays(folder, name, dbxin) {
-    var dbx;
+    let dbx;
     if (!dbxin) {
         console.log('Создаю DBX!');
         dbx = new Dropbox.Dropbox({
@@ -145,7 +145,6 @@ async function dbDownloadStringArrays(folder, name, dbxin) {
         })
     if (res == null) {
         return res;
-        log('YEEES');
     } else {
         let tex = await res.text();
         return tex;
@@ -173,29 +172,29 @@ function mdaStringToArray(tex) {
     }
 }
 
-async function dbUploadStringArray(data, folder, name) {
-    var dbx = new Dropbox.Dropbox({
-        clientId: APP_KEY,
-        clientSecret: APP_SECRET,
-        refreshToken: REFRESH_TOKEN
-    });
+// async function dbUploadStringArray(data, folder, name) {
+//     var dbx = new Dropbox.Dropbox({
+//         clientId: APP_KEY,
+//         clientSecret: APP_SECRET,
+//         refreshToken: REFRESH_TOKEN
+//     });
 
-    console.log('UPLOAD DBX = ', dbx);
+//     console.log('UPLOAD DBX = ', dbx);
 
-    //let jointData = data.join('	');
-    //let newFile = new Blob(jointData, { type: "text/plain" });
+//     //let jointData = data.join('	');
+//     //let newFile = new Blob(jointData, { type: "text/plain" });
 
-    dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
-        .then(function (response) {
-            console.log('Массив строк загружен');
-            console.log(response);
-            return true;
-        })
-        .catch(function (error) {
-            console.error(error.error || error);
-            return false;
-        });
-}
+//     dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
+//         .then(function (response) {
+//             console.log('Массив строк загружен');
+//             console.log(response);
+//             return true;
+//         })
+//         .catch(function (error) {
+//             console.error(error.error || error);
+//             return false;
+//         });
+// }
 
 function mdaArrayToString(data) {
     if (data) {
@@ -220,12 +219,18 @@ function mdaArrayToString(data) {
     }
 }
 
-async function dbUploadStringArrays(jointData, folder, name) {
-    var dbx = new Dropbox.Dropbox({
-        clientId: APP_KEY,
-        clientSecret: APP_SECRET,
-        refreshToken: REFRESH_TOKEN
-    });
+async function dbUploadStringArrays(jointData, folder, name, dbxin) {
+    let dbx;
+    if (!dbxin) {
+        console.log('Создаю DBX!');
+        dbx = new Dropbox.Dropbox({
+            clientId: APP_KEY,
+            clientSecret: APP_SECRET,
+            refreshToken: REFRESH_TOKEN
+        });
+    } else {
+        dbx = dbxin;
+    }
 
     console.log('UPLOAD DBX = ', dbx);
 
