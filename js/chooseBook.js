@@ -5,15 +5,35 @@ var bac = []; // books and chapters
 var choosedBook = -1;
 var readedChaptersFromBook = -1;
 var choosedChapter = -1;
+var dbx = null;
+var onlineStatus = false;
 //var books = ['1', '1', '1N', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', '2', '2N', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', '4', '4N', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', '7', '7N', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
 
-window.onload = async function () {
-  let dbx = await new Dropbox.Dropbox({
+async function test() {
+  updateFiles(dbx);
+}
+
+function test1(arr) {
+  arr[1] = 23;
+}
+
+async function createDbx() {
+  dbx = await new Dropbox.Dropbox({
     clientId: APP_KEY,
     clientSecret: APP_SECRET,
     refreshToken: REFRESH_TOKEN
-  });
-  await readFiles(dbx);
+  })
+}
+
+window.onload = async function () {
+  await createDbx();
+  //console.log('DBX:');
+  //console.log(dbx);
+  //await test();
+  //await updateFiles(dbx);
+  //await readFiles(dbx);
+  await updateFiles(dbx);
+  log('ONLINE = ', onlineStatus);
   //await readChapters(dbx);
   showBooks();
 }
@@ -26,22 +46,62 @@ function Exit() {
   }
 }
 
-async function test() {
-  let testArray = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
-  test1(testArray[1]);
-  console.log('TEST');
-  console.log(testArray);
-}
+async function updateFiles(dbxin) {
+  let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
+  let rawReadedFilesOffline = localStorage.getItem('bac');
 
-function test1(arr) {
-  arr[1] = 23;
+  if (rawReadedFilesOnline == null) {
+    onlineStatus = false;
+  } else {
+    onlineStatus = true;
+  }
+
+  log('ONLINE', onlineStatus);
+
+  if (!onlineStatus) {
+    let bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+    bac = bacoff;
+  } else {
+    let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
+    let bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
+
+    //log('bacoff', bacoff);
+
+    let comp = mdaBacCompare(bacon, bacoff);
+    log('comp', comp);
+
+    let uploadBooks = [];
+    let downloadBooks = [];
+    let conflictBooks = [];
+
+    for (let i = 0; i < comp.length; i++) {
+      for (let j = 0; j < comp[i].length; j++) {
+        let c0 = comp[i][j][0];
+        let c1 = comp[i][j][1];
+        if (c0 && c1) {
+          log('Сравнить', c0 + ' ' + c1);
+        } else if (c0) {
+          log('Скачать', c0)
+        } else {
+          log('Загрузить', c1)
+        }     
+      }
+    }
+
+    bac = bacon;
+  }
 }
 
 async function readFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
-  let rawReadedFilesOffline = localStorage.getItem('bac')
-  console.log('rawReadedFilesOnline:');
-  console.log('#' + rawReadedFilesOnline + '#');
+  if (rawReadedFilesOnline == null) {
+    onlineStatus = false;
+  } else {
+    onlineStatus = true;
+  }
+  let rawReadedFilesOffline = localStorage.getItem('bac');
+  //console.log('rawReadedFilesOnline:');
+  //console.log('#' + rawReadedFilesOnline + '#');
 
   let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
 
@@ -49,20 +109,20 @@ async function readFiles(dbxin) {
 
   let bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
 
-  console.log('mdaBacCompare');
-  if ((bacon && bacoff) && (bacon.length > 0) && (bacoff.length > 0)) {
-    console.log(mdaBacCompare(bacon, bacoff));
-  }
+  // console.log('mdaBacCompare');
+  // if ((bacon && bacoff) && (bacon.length > 0) && (bacoff.length > 0)) {
+  //   console.log(mdaBacCompare(bacon, bacoff));
+  // }
 
-  console.log('bacon:');
-  console.log(bacon);
-  console.log('bacoff');
-  console.log(bacoff);
+  // console.log('bacon:');
+  // console.log(bacon);
+  // console.log('bacoff');
+  // console.log(bacoff);
   bac = bacon;
-  console.log('mdaStringToArray(rawReadedFilesOnline)');
-  console.log(mdaStringToArray(rawReadedFilesOnline));
-  console.log('bac');
-  console.log(bac);
+  // console.log('mdaStringToArray(rawReadedFilesOnline)');
+  // console.log(mdaStringToArray(rawReadedFilesOnline));
+  // console.log('bac');
+  // console.log(bac);
   // books = readedBooksAndChapters[0];
   // let l = readedBooksAndChapters.length;
   // chapters.length = l - 1;
@@ -150,7 +210,7 @@ function showBooks() {
   const parentElement = document.getElementById('books');
   hideBooks();
   for (let i = 0; i < bac.length; i++) {
-    createBookButton(i, parentElement, true)
+    createBookButton(i, parentElement, true, false);
   }
   createButton(parentElement, 'Создать книгу', 'addBook', '')
 }
@@ -181,13 +241,17 @@ async function showChapter() {
   const parentElement = document.getElementById('books');
   hideBooks();
   createChapterButton(choosedChapter, parentElement, false)
-  createButton(parentElement, 'Редактировать', '', '');
+  createButton(parentElement, 'Редактировать', 'editChapter', 'choosedBook, choosedChapter');
   createButton(parentElement, 'Задать цель на день', '', '');
   createButton(parentElement, 'Задать цель на определённый срок', '', '');
   createButton(parentElement, 'Вернуться назад', 'showBook', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
   createButton(parentElement, 'Изменить название главы', 'changeChapterName', '');
   createButton(parentElement, 'Удалить главу', 'deleteChapter', '');
+}
+
+async function editChapter(bn, cn) {
+  alert(localStorage.getItem(bac[bn][0][0] + '_' + bac[bn][cn][0]));
 }
 
 function showBookSettings() {
@@ -201,26 +265,30 @@ function showBookSettings() {
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
 }
 
-function createBookButton(i, parentElement, isClickable) {
+function createBookButton(i, parentElement, isClickable, showDeleted) {
   const book = bac[i][0];
-  const btn = document.createElement("button");
-  btn.innerHTML = mdaCreateBookButtonHTML(book, i);
-  btn.setAttribute('class', 'buttonBook');
-  if (isClickable) {
-    btn.setAttribute('onclick', 'selectBook(' + i + ')');
+  if (book[16][1] == 0) {
+    const btn = document.createElement("button");
+    btn.innerHTML = mdaCreateBookButtonHTML(book, i);
+    btn.setAttribute('class', 'buttonBook');
+    if (isClickable) {
+      btn.setAttribute('onclick', 'selectBook(' + i + ')');
+    }
+    parentElement.appendChild(btn);
   }
-  parentElement.appendChild(btn);
 }
 
-function createChapterButton(i, parentElement, isClickable) {
+function createChapterButton(i, parentElement, isClickable, showDeleted) {
   const chapter = bac[choosedBook][i];
-  const btn = document.createElement("button");
-  btn.innerHTML = mdaCreateChapterButtonHTML(bac[choosedBook][i], i);
-  btn.setAttribute('class', 'buttonBook');
-  if (isClickable) {
-    btn.setAttribute('onclick', 'selectChapter(' + i + ')');
+  if (chapter[16][1] == 0) {
+    const btn = document.createElement("button");
+    btn.innerHTML = mdaCreateChapterButtonHTML(bac[choosedBook][i], i);
+    btn.setAttribute('class', 'buttonBook');
+    if (isClickable) {
+      btn.setAttribute('onclick', 'selectChapter(' + i + ')');
+    }
+    parentElement.appendChild(btn);
   }
-  parentElement.appendChild(btn);
 }
 
 function createButton(parentElement, lable, func, funcprm) {
@@ -239,12 +307,13 @@ function setTitle(title) {
   document.getElementById('booksTitle').innerText = title;
 }
 
-function deleteBook(i) {
-  let confirmDelete = confirm('Вы действительно хотите удалить книгу "' + bac[i][0][1] + '"?');
+function deleteBook(n) {
+  let confirmDelete = confirm('Вы действительно хотите удалить книгу "' + bac[n][0][1] + '"?');
   if (confirmDelete) {
-    let confirmDelete = confirm('Вы точно уверены, что хотите удалить книгу "' + bac[i][0][1] + '"? Книга будет удалена навсегда!!!');
+    let confirmDelete = confirm('Вы точно уверены, что хотите удалить книгу "' + bac[n][0][1] + '"? Книга будет удалена навсегда!!!');
     if (confirmDelete) {
-      bac.splice(i, 1);
+      //bac.splice(i, 1);
+      mdaDeleteBook(bac[n]);
       //chapters.splice(i, 1);
       showBooks();
       saveFiles();
@@ -260,7 +329,8 @@ function deleteChapter() {
   if (confirmDelete) {
     let confirmDelete = confirm('Вы точно уверены, что хотите удалить Главу ' + choosedChapter + '—' + bac[choosedBook][choosedChapter][1] + '? Глава будет удалена навсегда!!!');
     if (confirmDelete) {
-      bac[choosedBook].splice(choosedChapter, 1);
+      //bac[choosedBook].splice(choosedChapter, 1);
+      mdaDeleteChapter(bac[choosedBook][choosedChapter]);
       showBook();
       saveFiles();
     }
@@ -272,7 +342,8 @@ function changeBookName() {
   if ((bName) && (bName != '')) {
     bName.replace('	', '');
     bac[choosedBook][0][1] = bName;
-    bac[choosedBook][0][15] = (+(new Date())).toString();
+    //bac[choosedBook][0][15] = (+(new Date())).toString();
+    mdaCommitChanges(bac[choosedBook][0]);
     saveFiles();
     showBook();
   }
@@ -283,7 +354,8 @@ function changeChapterName() {
   if ((bName) && (bName != '')) {
     bName.replace('	', '');
     bac[choosedBook][choosedChapter][1] = bName;
-    bac[choosedBook][choosedChapter][15] = (+(new Date())).toString();
+    //bac[choosedBook][choosedChapter][15] = (+(new Date())).toString();
+    mdaCommitChanges(bac[choosedBook][choosedChapter]);
     saveFiles();
     showChapter();
   }

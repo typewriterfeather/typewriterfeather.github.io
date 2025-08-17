@@ -2,11 +2,11 @@ var APP_KEY = 'kj5lj89k7br0v46';
 var APP_SECRET = 'px68axwvij1w561';
 
 var REFRESH_TOKEN = localStorage.getItem('dbRefreshToken');
-console.log(REFRESH_TOKEN);
+//console.log(REFRESH_TOKEN);
 var UID = localStorage.getItem('dbUID');
 
-mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE', 'DD'];
-mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE', 'DD'];
+mdaBooksParams = ['', 'N', 'D', 'DS', 'LC', 'LCN', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE', 'DD', 'PRM'];
+mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 'LTDB', 'LTDE', 'LTLF', 'LTLS', 'LTDB', 'LTDE', 'DD', 'PRM'];
 
 {
     // 0  - id      id
@@ -25,6 +25,7 @@ mdaChaptersParams = ['', 'N', 'D', 'DS', 'UNDEF', 'UNDEF', 'LTZ', 'LTF', 'LTS', 
     // 13 - LTLB    -//-
     // 14 - LTLE    -//-
     // 15 - DD      Дата последнего редактирования на устройстве
+    // 16 - PRM     Праметры: 0 - Должна ли книга храниться на устройстве?, 1 - Удалён ли файл?
 }
 
 function structDate(date) {
@@ -144,10 +145,15 @@ async function dbDownloadStringArrays(folder, name, dbxin) {
         })
     if (res == null) {
         return res;
+        log('YEEES');
     } else {
         let tex = await res.text();
         return tex;
     }
+}
+
+function mdaCommitChanges(chapter) {
+    chapter[15] = (+(new Date())).toString();
 }
 
 function mdaStringToArray(tex) {
@@ -176,7 +182,7 @@ async function dbUploadStringArray(data, folder, name) {
 
     console.log('UPLOAD DBX = ', dbx);
 
-    let jointData = data.join('	');
+    //let jointData = data.join('	');
     //let newFile = new Blob(jointData, { type: "text/plain" });
 
     dbx.filesUpload({ path: folder + '/' + name, contents: jointData, mode: 'overwrite' })
@@ -373,20 +379,20 @@ function mdaFindChapteribyID(book, id) {
 }
 
 function mdaBacCompare(bacon, bacoff) {
-    let compare = [[], [], [], []]; // 0 - сравниваемый онлайн, 1 - сравниваемый оффлайн, 3 - несравниваемый онлайн (нужно скачать), 4 - несравниваемый оффлайн (нужно загрузить)
+    let compare = [[], [], [], []]; // 0 - сравниваемый онлайн, 1 - сравниваемый оффлайн, 2 - несравниваемый онлайн (нужно скачать), 3 - несравниваемый оффлайн (нужно загрузить)
     for (let i = 0; i < bacon.length; i++) {
         let compi = mdaFindBookibyID(bacoff, bacon[i][0][0]);
         if (compi > -1) {
             compare[0].push(bacon[i]);
             compare[1].push(bacoff[i]);
         } else {
-            compare[3].push(bacon[i]);
+            compare[2].push(bacon[i]);
         }
     }
     for (let i = 0; i < bacoff.length; i++) {
         let compi = mdaFindBookibyID(bacon, bacoff[i][0][0]);
         if (compi == -1) {
-            compare[4].push(bacoff[i]);
+            compare[3].push(bacoff[i]);
         }
     }
 
@@ -410,7 +416,7 @@ function mdaBacCompare(bacon, bacoff) {
             comp[i][j + l][0] = uncomp[j];
         }
         uncomp = [];
-        for (let j = 0; j < compare[0][i].length; j++) {
+        for (let j = 0; j < compare[1][i].length; j++) {
             let compi = mdaFindChapteribyID(compare[0][i], compare[1][i][j][0]);
             if (compi == -1) {
                 uncomp.push(compare[1][i][j]);
@@ -426,12 +432,21 @@ function mdaBacCompare(bacon, bacoff) {
     let l = comp.length;
     for (let i = 0; i < compare[2].length; i++) {
         comp[i + l] = [];
-        comp[i + l][0] = compare[2][i];
+        //comp[i + l][0] = compare[2][i];
+        for (let j = 0; j < compare[2][i].length; j++) {
+            comp[i + l][j] = [];
+            comp[i + l][j][0] = compare[2][i][j];
+        }
     }
     l = comp.length;
     for (let i = 0; i < compare[3].length; i++) {
         comp[i + l] = [];
-        comp[i + l][0] = compare[3][i];
+        //comp[i + l][0] = compare[3][i];
+        //log('compare[3][i]', compare[3][i]);
+        for (let j = 0; j < compare[3][i].length; j++) {
+            comp[i + l][j] = [];
+            comp[i + l][j][1] = compare[3][i][j];
+        }
     }
 
     return comp;
@@ -468,44 +483,24 @@ function mdaSaveBooksAndChapters(bac) {
 }
 
 function mdaAddBook(bName, bac, arrPrms) {
-    //console.log(bac);
     let l = 0;
-    let found = false;
     if (bac) {
         l = bac.length;
-        k = 0;
-        while (!found) {
-            found = true;
-            k++;
-            for (let i = 0; i < l; i++) {
-                if (bac[i][0][0] == k) {
-                    found = false;
-                    break;
-                }
-            }
-        }
     } else {
-        k = 1;
         bac = [];
     }
-
-    //bac.length = l + 1;
     bac[l] = [];
     bac[l][0] = [];
-    //bac[l].length = arrPrms.length;
     bac[l][0][0] = (+(new Date())).toString();
     bac[l][0][1] = bName;
     bac[l][0][2] = bac[l][0][0];
     bac[l][0][3] = 0;
     bac[l][0][15] = bac[l][0][2];
-
-    return k;
-    //console.log(bac);
+    bac[l][0][16] = '10';
 }
 
 
 function mdaAddChapter(cName, book) {
-    //console.log(chapters);
     l = book.length;
     book[l] = [];
     book[l].length = mdaChaptersParams.length;
@@ -514,6 +509,27 @@ function mdaAddChapter(cName, book) {
     book[l][2] = book[l][0];
     book[l][3] = 0;
     book[l][15] = book[l][0];
+    book[l][16] = '10';
+
+    localStorage.setItem(book[0][0] + '_' + book[l][0], 'TEXT: ' + book[0][0] + '_' + book[l][0]);
+}
+
+function mdaDeleteChapter(chapter) {
+    chapter[16] = mdaStringReplaceChar(chapter[16], 1, '1');
+    mdaCommitChanges(chapter);
+}
+
+function mdaDeleteBook(book) {
+    for (let i = 0; i < book.length; i++) {
+        let chapter = book[i];
+        mdaDeleteChapter(chapter);
+    }
+}
+
+function mdaStringReplaceChar(str, n, char) {
+    let sstr = str.split('');
+    sstr[n] = char;
+    return sstr.join('');
 }
 
 function mdaCreateBookButtonHTML(book, i) {
@@ -702,4 +718,9 @@ function mdaDateAddZero(day) {
 
 function clampNumber(val, min, max) {
     return Math.min(Math.max(val, min), max);
+}
+
+function log(text, prm) {
+    console.log(structTime() + ' ' + text + ':');
+    console.log(prm);
 }
