@@ -48,7 +48,7 @@ function Exit() {
 
 async function updateFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
-  //log('rawReadedFilesOnline', rawReadedFilesOnline);
+  log('rawReadedFilesOnline', rawReadedFilesOnline);
 
   if (rawReadedFilesOnline == 'TypeError: Failed to fetch') {
     onlineStatus = false;
@@ -63,6 +63,8 @@ async function updateFiles(dbxin) {
     bacoff = bac;
   } else {
     let rawReadedFilesOffline = localStorage.getItem('bac');
+    log('rawReadedFilesOffline', rawReadedFilesOffline);
+    log('mdaStringToArray(rawReadedFilesOffline)', mdaStringToArray(rawReadedFilesOffline));
     bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
   }
 
@@ -75,10 +77,12 @@ async function updateFiles(dbxin) {
     }
     let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
 
-    //log('bacoff', bacoff);
+    log('bacoff', bacoff);
 
     let comp = mdaBacCompare(bacon, bacoff);
-    //log('comp', comp);
+    let comp2 = mdaBacCompare2(bacon, bacoff);
+    log('comp', comp);
+    log('comp2', comp2);
 
     let uploadBooks = [];
     let downloadBooks = [];
@@ -209,8 +213,8 @@ async function updateFiles(dbxin) {
 
     let connectionLost = false;
 
-    log('uploadBooks', uploadBooks);
-    log('downloadBooks', downloadBooks);
+    //log('uploadBooks', uploadBooks);
+    //log('downloadBooks', downloadBooks);
 
     for (let i = 0; i < uploadBooks.length; i++) {
       let name = uploadBooks[i][0][0] + '_' + uploadBooks[i][1][0];
@@ -259,6 +263,8 @@ async function updateFiles(dbxin) {
 
 async function saveBac(toLocal, toGlobal) {
   let filesToSave = mdaArrayToString(mdaSaveBooksAndChapters(bac));
+  //log('mdaSaveBooksAndChapters(bac)', mdaSaveBooksAndChapters(bac));
+  //log('filesToSave', filesToSave);
   if (toLocal) {
     localStorage.setItem('bac', filesToSave);
   }

@@ -159,7 +159,7 @@ function mdaCommitChanges(chapter) {
 }
 
 function mdaStringToArray(tex) {
-    if ((tex == null) || (tex == '')) {
+    if ((tex == 'null') || (tex == '')) {
         return [];
     } else {
         let tex1 = tex.split('			');
@@ -250,7 +250,7 @@ async function dbUploadStringArrays(jointData, folder, name, dbxin) {
             res = false;
         });
 
-        return res;
+    return res;
 }
 
 function mdaFindParamI(arr, n, param) { //My Data Array
@@ -390,6 +390,88 @@ function mdaFindChapteribyID(book, id) {
     return fid;
 }
 
+function mdaBacCompare2(bacon, bacoff) {
+    let compare = [[], [], [], []]; // 0 - сравниваемый онлайн, 1 - сравниваемый оффлайн, 2 - несравниваемый онлайн (нужно скачать), 3 - несравниваемый оффлайн (нужно загрузить)
+
+    let comparedCount;
+    for (comparedCount = 0; comparedCount < bacon.length; comparedCount++) {
+        if (bacon[i][0][0] != bacoff[i][0][0]) {
+            break;
+        } else {
+            compare[0].push(bacon[i]);
+            compare[1].push(bacoff[i]);
+        }
+    }
+
+    for (let i = comparedCount; i < bacon.length; i++) {
+        compare[2].push(bacon[i]);
+    }
+
+    for (let i = comparedCount; i < bacoff.length; i++) {
+        compare[3].push(bacoff[i]);
+    }
+
+    let comp = [];
+    for (let i = 0; i < compare[0].length; i++) {
+        comp[i] = [];
+        let uncomp = [];
+
+        let j;
+        for (j = 0; j < compare[0][i].length; j++) {
+            comp[i][j] = [];
+            if (compare[0][i][j][0] != compare[1][i][j][0]) {
+                break;
+            } else {
+                comp[i][j][0] = compare[0][i][j];
+                comp[i][j][1] = compare[1][i][j];
+            }
+        }
+
+        comparedCount = j;
+
+        for (j = comparedCount; j < compare[0][i].length; j++) {
+            comp[i][j][0] = compare[0][i][j];
+        }
+
+        let l = comp[i].length - comparedCount;
+
+        for (j = comparedCount; j < compare[1][i].length; j++) {
+            comp[i][j + l][1] = compare[1][i][j];
+        }
+
+
+
+        comp[i][j] = [];
+        let compi = mdaFindChapteribyID(compare[1][i], compare[0][i][j][0]);
+        if (compi > -1) {
+            comp[i][j][0] = compare[0][i][j];
+            comp[i][j][1] = compare[1][i][j];
+        } else {
+            uncomp.push(compare[0][i][j]);
+        }
+    }
+
+    let l = comp.length;
+    for (let i = 0; i < compare[2].length; i++) {
+        comp[i + l] = [];
+        for (let j = 0; j < compare[2][i].length; j++) {
+            comp[i + l][j] = [];
+            comp[i + l][j][0] = compare[2][i][j];
+        }
+    }
+    l = comp.length;
+    for (let i = 0; i < compare[3].length; i++) {
+        comp[i + l] = [];
+        for (let j = 0; j < compare[3][i].length; j++) {
+            comp[i + l][j] = [];
+            comp[i + l][j][1] = compare[3][i][j];
+        }
+    }
+
+    return comp;
+}
+
+
 function mdaBacCompare(bacon, bacoff) {
     let compare = [[], [], [], []]; // 0 - сравниваемый онлайн, 1 - сравниваемый оффлайн, 2 - несравниваемый онлайн (нужно скачать), 3 - несравниваемый оффлайн (нужно загрузить)
     for (let i = 0; i < bacon.length; i++) {
@@ -468,6 +550,9 @@ function mdaSaveBooksAndChapters(bac) {
     let arro = null;
     if (bac.length > 0) {
         arro = [];
+        log('bac.length', bac.length);
+    } else {
+        return arro;
     }
     let lb = mdaBooksParams.length;
     let lc = mdaChaptersParams.length;
