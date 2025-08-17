@@ -159,7 +159,7 @@ function mdaCommitChanges(chapter) {
 }
 
 function mdaStringToArray(tex) {
-    if ((tex == 'null') || (tex == '')) {
+    if ((tex == 'null') || (tex == null) || (tex == '')) {
         return [];
     } else {
         let tex1 = tex.split('			');
@@ -393,14 +393,18 @@ function mdaFindChapteribyID(book, id) {
 function mdaBacCompare2(bacon, bacoff) {
     let compare = [[], [], [], []]; // 0 - сравниваемый онлайн, 1 - сравниваемый оффлайн, 2 - несравниваемый онлайн (нужно скачать), 3 - несравниваемый оффлайн (нужно загрузить)
 
-    let comparedCount;
-    for (comparedCount = 0; comparedCount < bacon.length; comparedCount++) {
-        let i = comparedCount;
-        if (bacon[i][0][0] != bacoff[i][0][0]) {
-            break;
-        } else {
-            compare[0].push(bacon[i]);
-            compare[1].push(bacoff[i]);
+
+    let comparedCount = 0;
+
+    if ((bacon.length > 0) && (bacoff.length > 0)) {
+        for (comparedCount = 0; comparedCount < bacon.length; comparedCount++) {
+            let i = comparedCount;
+            if (bacon[i][0][0] != bacoff[i][0][0]) {
+                break;
+            } else {
+                compare[0].push(bacon[i]);
+                compare[1].push(bacoff[i]);
+            }
         }
     }
 
