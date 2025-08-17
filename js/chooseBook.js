@@ -48,7 +48,7 @@ function Exit() {
 
 async function updateFiles(dbxin) {
   let rawReadedFilesOnline = await dbDownloadStringArrays('', 'books.txt', dbxin);
-  log('rawReadedFilesOnline', rawReadedFilesOnline);
+  //log('rawReadedFilesOnline', rawReadedFilesOnline);
 
   if (rawReadedFilesOnline == 'TypeError: Failed to fetch') {
     onlineStatus = false;
@@ -63,8 +63,8 @@ async function updateFiles(dbxin) {
     bacoff = bac;
   } else {
     let rawReadedFilesOffline = localStorage.getItem('bac');
-    log('rawReadedFilesOffline', rawReadedFilesOffline);
-    log('mdaStringToArray(rawReadedFilesOffline)', mdaStringToArray(rawReadedFilesOffline));
+    //log('rawReadedFilesOffline', rawReadedFilesOffline);
+    //log('mdaStringToArray(rawReadedFilesOffline)', mdaStringToArray(rawReadedFilesOffline));
     bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
   }
 
@@ -77,12 +77,12 @@ async function updateFiles(dbxin) {
     }
     let bacon = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOnline));
 
-    log('bacoff', bacoff);
+    //log('bacoff', bacoff);
 
-    let comp = mdaBacCompare(bacon, bacoff);
-    let comp2 = mdaBacCompare2(bacon, bacoff);
-    log('comp', comp);
-    log('comp2', comp2);
+    let comp = mdaBacCompare2(bacon, bacoff);
+    //let comp2 = mdaBacCompare2(bacon, bacoff);
+    //log('comp', comp);
+    //log('comp2', comp2);
 
     let uploadBooks = [];
     let downloadBooks = [];
@@ -148,7 +148,7 @@ async function updateFiles(dbxin) {
         b1[3] = b1[15];
         //uploadBooks.push(b1);
       }
-      
+
       for (let j = 1; j < comp[i].length; j++) {
         let c0 = comp[i][j][0];
         let c1 = comp[i][j][1];
@@ -247,7 +247,7 @@ async function updateFiles(dbxin) {
       }
     }
 
-    log('rawBac', rawBac);
+    //log('rawBac', rawBac);
 
     bac = rawBac;
 
@@ -340,6 +340,8 @@ async function saveFiles() {
 
 
 async function addBook() {
+  hideBooks();
+  setTitle('Обновление...');
   let bName = prompt('Введите название книги:', '');
   if ((bName) && (bName != '')) {
     bName.replace('	', '');
@@ -357,14 +359,16 @@ async function addBook() {
   }
 }
 
-function addChapter() {
+async function addChapter() {
+  hideBooks();
+  setTitle('Обновление...');
   let cName = prompt('Введите название главы:', '');
   if ((cName) && (cName != '')) {
     cName.replace('	', '');
-    mdaAddChapter(cName, bac[choosedBook]);
+    await mdaAddChapter(cName, bac[choosedBook]);
     console.log('Chapter added');
     console.log(bac);
-    saveFiles();
+    await saveFiles();
     showBook();
   }
 }
@@ -390,7 +394,14 @@ function showBooks() {
   hideBooks();
   //log('bac', bac);
   for (let i = 0; i < bac.length; i++) {
-    createBookButton(i, parentElement, true, false);
+    if (bac[i][0][16][0] == 1) {
+      createBookButton(i, parentElement, true, false);
+    }
+  }
+  for (let i = 0; i < bac.length; i++) {
+    if (bac[i][0][16][0] == 0) {
+      createBookButton(i, parentElement, true, false);
+    }
   }
   createButton(parentElement, 'Создать книгу', 'addBook', '')
 }
@@ -512,16 +523,18 @@ function setTitle(title) {
   document.getElementById('booksTitle').innerText = title;
 }
 
-function deleteBook(n) {
+async function deleteBook(n) {
   let confirmDelete = confirm('Вы действительно хотите удалить книгу "' + bac[n][0][1] + '"?');
   if (confirmDelete) {
     let confirmDelete = confirm('Вы точно уверены, что хотите удалить книгу "' + bac[n][0][1] + '"? Книга будет удалена навсегда!!!');
     if (confirmDelete) {
+      hideBooks();
+      setTitle('Обновление...');
       //bac.splice(i, 1);
       mdaDeleteBook(bac[n]);
       //chapters.splice(i, 1);
+      await saveFiles();
       showBooks();
-      saveFiles();
       // if (choosedChapter >= 0) {
       //   choosedBook -= 1;
       // }
@@ -529,39 +542,45 @@ function deleteBook(n) {
   }
 }
 
-function deleteChapter() {
+async function deleteChapter() {
   let confirmDelete = confirm('Вы действительно хотите удалить Главу ' + choosedChapter + '—' + bac[choosedBook][choosedChapter][1] + '?');
   if (confirmDelete) {
     let confirmDelete = confirm('Вы точно уверены, что хотите удалить Главу ' + choosedChapter + '—' + bac[choosedBook][choosedChapter][1] + '? Глава будет удалена навсегда!!!');
     if (confirmDelete) {
+      hideBooks();
+      setTitle('Обновление...');
       //bac[choosedBook].splice(choosedChapter, 1);
       mdaDeleteChapter(bac[choosedBook][choosedChapter]);
+      await saveFiles();
       showBook();
-      saveFiles();
     }
   }
 }
 
-function changeBookName() {
+async function changeBookName() {
   let bName = prompt('Введите новое название книги:', '');
   if ((bName) && (bName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
     bName.replace('	', '');
     bac[choosedBook][0][1] = bName;
     //bac[choosedBook][0][15] = (+(new Date())).toString();
     mdaCommitChanges(bac[choosedBook][0]);
-    saveFiles();
+    await saveFiles();
     showBook();
   }
 }
 
-function changeChapterName() {
+async function changeChapterName() {
   let bName = prompt('Введите новое название главы:', '');
   if ((bName) && (bName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
     bName.replace('	', '');
     bac[choosedBook][choosedChapter][1] = bName;
     //bac[choosedBook][choosedChapter][15] = (+(new Date())).toString();
-    mdaCommitChanges(bac[choosedBook][choosedChapter]);
-    saveFiles();
+    await mdaCommitChanges(bac[choosedBook][choosedChapter]);
+    await saveFiles();
     showChapter();
   }
 }

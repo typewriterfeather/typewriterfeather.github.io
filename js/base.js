@@ -395,6 +395,7 @@ function mdaBacCompare2(bacon, bacoff) {
 
     let comparedCount;
     for (comparedCount = 0; comparedCount < bacon.length; comparedCount++) {
+        let i = comparedCount;
         if (bacon[i][0][0] != bacoff[i][0][0]) {
             break;
         } else {
@@ -430,25 +431,17 @@ function mdaBacCompare2(bacon, bacoff) {
         comparedCount = j;
 
         for (j = comparedCount; j < compare[0][i].length; j++) {
+            comp[i][j + l] = [];
             comp[i][j][0] = compare[0][i][j];
         }
 
         let l = comp[i].length - comparedCount;
 
         for (j = comparedCount; j < compare[1][i].length; j++) {
+            comp[i][j + l] = [];
             comp[i][j + l][1] = compare[1][i][j];
         }
 
-
-
-        comp[i][j] = [];
-        let compi = mdaFindChapteribyID(compare[1][i], compare[0][i][j][0]);
-        if (compi > -1) {
-            comp[i][j][0] = compare[0][i][j];
-            comp[i][j][1] = compare[1][i][j];
-        } else {
-            uncomp.push(compare[0][i][j]);
-        }
     }
 
     let l = comp.length;
@@ -550,7 +543,7 @@ function mdaSaveBooksAndChapters(bac) {
     let arro = null;
     if (bac.length > 0) {
         arro = [];
-        log('bac.length', bac.length);
+        //log('bac.length', bac.length);
     } else {
         return arro;
     }
@@ -593,7 +586,7 @@ function mdaAddBook(bName, bac, arrPrms) {
     bac[l][0][2] = bac[l][0][0];
     bac[l][0][3] = 0;
     bac[l][0][15] = bac[l][0][2];
-    bac[l][0][16] = '00';
+    bac[l][0][16] = '10';
 }
 
 
@@ -711,6 +704,11 @@ function mdaCreateBookButtonHTML(book, i) {
     }
 
     let out = '';
+
+    if (book[16][0] == 1) {
+        out += '* ';
+    }
+
     out += book[1] + lastChapter;
     out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
     out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
