@@ -84,7 +84,7 @@ async function updateFiles(dbxin) {
     log('bacon', bacon);
     let comp = mdaBacCompare2(bacon, bacoff);
     //let comp2 = mdaBacCompare2(bacon, bacoff);
-    //log('comp', comp);
+    log('comp', comp);
     //log('comp2', comp2);
 
     let uploadBooks = [];
@@ -170,7 +170,9 @@ async function updateFiles(dbxin) {
 
           } else {
             //log('Сравнить', c0 + ' ' + c1);
-            if (c0[3] == c1[3]) {
+            
+
+            if (c0[15] == c1[3]) {
               if (c1[3] != c1[15]) {
                 // Если нет конфликта и файл обновился на устройстве
                 log('U1');
@@ -184,14 +186,16 @@ async function updateFiles(dbxin) {
             } else if ((b1[3] == b1[15]) || !(b1[3])) {
               // Если нет конфликта и файл обновился на сервере
               decision[i][j] = 0;
+              c0[3] = c0[15];
               log('D1');
               downloadBooks.push([b0, c0]);
             } else {
               // Если есть конфликт                           TODO TODO
               //log('Конфликт в книге:', b0[1] + '/' + b1[1] + ' - ' + c0[1] + '/' + c1[1]);
-              if (c0[3] > c1[3]) {
+              if (c0[15] > c1[3]) {
                 // Сохраняется более свежий файл!
                 decision[i][j] = 0;
+                c0[3] = c0[15];
                 //log('D2');
                 downloadBooks.push([b0, c0]);
               } else {
@@ -206,6 +210,7 @@ async function updateFiles(dbxin) {
           // Если файл есть только на сервере
           //log('Download', c0)
           c0[16] = mdaStringReplaceChar(c0[16], 0, 0);
+          c0[3] = 0;
           decision[i][j] = 0;
           //downloadBooks.push([b0, c0]);
         } else {
