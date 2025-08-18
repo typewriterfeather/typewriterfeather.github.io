@@ -406,6 +406,8 @@ function mdaBacCompare2(bacon, bacoff) {
             } else {
                 compare[0].push(bacon[i]);
                 compare[1].push(bacoff[i]);
+                //log('bacon[i]', bacon[i]);
+                //log('bacoff[i]', bacoff[i]);
             }
         }
     }
@@ -424,8 +426,11 @@ function mdaBacCompare2(bacon, bacoff) {
         let uncomp = [];
 
         let j;
-        for (j = 0; j < compare[0][i].length; j++) {
+        let countTo = Math.min(compare[0][i].length, compare[1][i].length);
+        for (j = 0; j < countTo; j++) {
             comp[i][j] = [];
+            //log('compare[0][i][j]', compare[0][i][j]);
+            //log('compare[1][i][j]', compare[1][i][j]);
             if (compare[0][i][j][0] != compare[1][i][j][0]) {
                 break;
             } else {
@@ -437,7 +442,7 @@ function mdaBacCompare2(bacon, bacoff) {
         comparedCount = j;
 
         for (j = comparedCount; j < compare[0][i].length; j++) {
-            comp[i][j + l] = [];
+            comp[i][j] = [];
             comp[i][j][0] = compare[0][i][j];
         }
 
@@ -713,7 +718,7 @@ function mdaCreateBookButtonHTML(book, i) {
 
     if (book[16][0] == 1) {
         out += '*';
-        if (book[16][3] == book[15]) {
+        if (book[3] == book[15]) {
             out += '* ';
         } else {
             out += ' ';

@@ -68,6 +68,8 @@ async function updateFiles(dbxin) {
     bacoff = mdaReadBooksAndChapters(mdaStringToArray(rawReadedFilesOffline));
   }
 
+  log('bacoff', bacoff);
+
   if (!onlineStatus) {
     bac = bacoff;
     saveBac(true, false);
@@ -215,8 +217,8 @@ async function updateFiles(dbxin) {
 
     let connectionLost = false;
 
-    log('uploadBooks', uploadBooks);
-    log('downloadBooks', downloadBooks);
+    //log('uploadBooks', uploadBooks);
+    //log('downloadBooks', downloadBooks);
 
     for (let i = 0; i < uploadBooks.length; i++) {
       let name = uploadBooks[i][0][0] + '_' + uploadBooks[i][1][0];
@@ -249,7 +251,7 @@ async function updateFiles(dbxin) {
       }
     }
 
-    //log('rawBac', rawBac);
+    log('rawBac', rawBac);
 
     bac = rawBac;
 
@@ -522,6 +524,9 @@ function createButton(parentElement, lable, func, funcprm) {
 }
 
 function setTitle(title) {
+  if (!onlineStatus) {
+    title += ' (Оффлайн доступ)';
+  }
   document.getElementById('booksTitle').innerText = title;
 }
 
