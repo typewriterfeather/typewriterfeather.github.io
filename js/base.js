@@ -665,7 +665,11 @@ function mdaCreateBookButtonHTML(book, i) {
     let ltPercentWords = 0;
     let ltPercentDayz = 0;
 
+    let bar1 = false;
+    let bar2 = false;
+
     if (book[6] && book[7] && book[8] && book[9] && book[10]) {
+        bar1 = true;
         let lt0 = parseInt(book[6]);
         let lt1 = parseInt(book[7]);
         let lt2 = parseInt(book[8]);
@@ -693,6 +697,7 @@ function mdaCreateBookButtonHTML(book, i) {
     let ltlPercentDayz = 0;
 
     if (book[6] && book[11] && book[12] && book[13] && book[14]) {
+        bar2 = true;
         let ltl0 = parseInt(book[6]);
         let ltl1 = parseInt(book[11]);
         let ltl2 = parseInt(book[12]);
@@ -716,6 +721,8 @@ function mdaCreateBookButtonHTML(book, i) {
 
     let out = '';
 
+    out += '<br>';
+
     if (book[16][0] == 1) {
         out += '*';
         if (book[3] == book[15]) {
@@ -726,10 +733,21 @@ function mdaCreateBookButtonHTML(book, i) {
     }
 
     out += book[1] + lastChapter;
-    out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
-    out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
-    out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
-    out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
+
+    if (bar1 || bar2) {
+        out += '<div class="bars">';
+        if (bar1) {
+            out += '<div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
+            out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
+        }
+        if (bar2) {
+            out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
+            out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div>';
+        }
+        out += '</div>';
+    } else {
+        out += '<br><br>';
+    }
     out += '<div class="dates"><div class="dates"><div>Созд.: ' + creationDateS + '</div> <div>' + creationTimeS + '</div></div><div class="dates"><div>Ред.: ' + editDateS + '</div> <div>' + editTimeS + '</div></div></div>';
 
     return out;
@@ -759,7 +777,11 @@ function mdaCreateChapterButtonHTML(chapter, i) {
     let ltPercentWords = 0;
     let ltPercentDayz = 0;
 
+    let bar1 = false;
+    let bar2 = false;
+
     if (chapter[6] && chapter[7] && chapter[8] && chapter[9] && chapter[10]) {
+        bar1 = true;
         let lt0 = parseInt(chapter[6]);
         let lt1 = parseInt(chapter[7]);
         let lt2 = parseInt(chapter[8]);
@@ -787,6 +809,7 @@ function mdaCreateChapterButtonHTML(chapter, i) {
     let ltlPercentDayz = 0;
 
     if (chapter[6] && chapter[11] && chapter[12] && chapter[13] && chapter[14]) {
+        bar2 = true;
         let ltl0 = parseInt(chapter[6]);
         let ltl1 = parseInt(chapter[11]);
         let ltl2 = parseInt(chapter[12]);
@@ -809,11 +832,26 @@ function mdaCreateChapterButtonHTML(chapter, i) {
     }
 
     let out = '';
+
+    out += '<br>';
+
     out += 'Глава ' + i + ' — ' + chapter[1];
-    out += '<div class="bars"><div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
-    out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
-    out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
-    out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div></div>';
+
+    if (bar1 || bar2) {
+        out += '<div class="bars">';
+        if (bar1) {
+            out += '<div class="barContainer"><div class="bar1" style="width: ' + ltPercentWords + '%">';
+            out += '</div><div class="bar2" style="width: ' + ltPercentDayz + '%"></div></div><div class="barnum">' + ltNeededWordsS + '</div>';
+        }
+        if (bar2) {
+            out += '<div class="barContainer"><div class="bar1" style="width: ' + ltlPercentWords + '%"></div><div class="bar2" style="width: ' + ltlPercentDayz + '%">';
+            out += '</div></div><div class="barnum">' + ltlNeededWordsS + '/' + ltlDaysLeftS + '</div>';
+        }
+        out += '</div>';
+    } else {
+        out += '<br><br>';
+    }
+
     out += '<div class="dates"><div class="dates"><div>Созд.: ' + creationDateS + '</div> <div>' + creationTimeS + '</div></div><div class="dates"><div>Ред.: ' + editDateS + '</div> <div>' + editTimeS + '</div></div></div>';
 
     return out;

@@ -10,11 +10,15 @@ var onlineStatus = false;
 //var books = ['1', '1', '1N', 'Name 1', '1D', '11.11.2011', '1DS', '12.11.2011', '1LC', '0', '2', '2', '2N', 'Name 2', '2D', '22.02.2002', '2DS', '23.02.2002', '2LC', '2', '4', '4', '4N', 'Name 4', '4D', '24.04.2004', '4DS', '25.04.2004', '4LC', '3', '7', '7', '7N', 'Name 7', '7D', '27.07.2007', '7DS', '28.07.2007', '7LC', '8'];
 
 async function test() {
-  clearLocalStorage();
+  test2(test1, 23);
 }
 
-function test1(arr) {
-  arr[1] = 23;
+function test2(func, i) {
+  func(i);
+}
+
+function test1(i) {
+  alert(i);
 }
 
 async function createDbx() {
@@ -84,7 +88,7 @@ async function updateFiles(dbxin) {
     log('bacon', bacon);
     let comp = mdaBacCompare2(bacon, bacoff);
     //let comp2 = mdaBacCompare2(bacon, bacoff);
-    log('comp', comp);
+    //log('comp', comp);
     //log('comp2', comp2);
 
     let uploadBooks = [];
@@ -98,7 +102,18 @@ async function updateFiles(dbxin) {
       let b1 = comp[i][0][1];
 
       if (b0 && b1) {
-        b0[16] = mdaStringReplaceChar(b0[16], 0, b1[16][0]);
+        if (b1[16][1] == '0') {
+          b0[16] = mdaStringReplaceChar(b0[16], 0, b1[16][0]);
+        }
+
+        if ((b0[16][1] == '1') || (b1[16][1] == '1')) {
+          b0[16] = mdaStringReplaceChar(b0[16], 0, 0);
+          b0[16] = mdaStringReplaceChar(b0[16], 1, 1);
+          b1[16] = mdaStringReplaceChar(b1[16], 0, 0);
+          b1[16] = mdaStringReplaceChar(b1[16], 1, 1);
+        }
+
+
         if (b1[16][0] == '0') {
           //log('Не РЕдактируется:', b1[1]);
           decision[i][0] = 0;
@@ -170,12 +185,12 @@ async function updateFiles(dbxin) {
 
           } else {
             //log('Сравнить', c0 + ' ' + c1);
-            
+
 
             if (c0[15] == c1[3]) {
               if (c1[3] != c1[15]) {
                 // Если нет конфликта и файл обновился на устройстве
-                log('U1');
+                //log('U1');
                 decision[i][j] = 1;
                 c1[3] = c1[15];
                 uploadBooks.push([b1, c1]);
@@ -187,7 +202,7 @@ async function updateFiles(dbxin) {
               // Если нет конфликта и файл обновился на сервере
               decision[i][j] = 0;
               c0[3] = c0[15];
-              log('D1');
+              //log('D1');
               downloadBooks.push([b0, c0]);
             } else {
               // Если есть конфликт                           TODO TODO
@@ -451,20 +466,31 @@ async function showBook() {
   const parentElement = document.getElementById('books');
   hideBooks();
   createBookButton(choosedBook, parentElement, false);
-  createButton(parentElement, 'Настройки книги', 'showBookSettings', '');
   if (bac[choosedBook][0][16][0] == '0') {
+    createButton(parentElement, 'Настройки книги (Для доступа начните редактировать книгу)', '', '');
     createButton(parentElement, 'Редактировать книгу', 'startBookEditing', '');
   } else {
+    createButton(parentElement, 'Настройки книги', 'showBookSettings', '');
     createButton(parentElement, 'Перестать редактировать книгу', 'stopBookEditing', '');
   }
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
   createButton(parentElement, 'СОДЕРЖАНИЕ', '', '');
-  if (bac[choosedBook]) {
-    for (let i = 1; i < bac[choosedBook].length; i++) {
-      createChapterButton(i, parentElement, true)
+
+  if (bac[choosedBook][0][16][0] == '0') {
+    if (bac[choosedBook]) {
+      for (let i = 1; i < bac[choosedBook].length; i++) {
+        createChapterButton(i, parentElement, false)
+      }
     }
+    createButton(parentElement, 'Добавить главу (Для доступа начните редактировать книгу)', '', '');
+  } else {
+    if (bac[choosedBook]) {
+      for (let i = 1; i < bac[choosedBook].length; i++) {
+        createChapterButton(i, parentElement, true)
+      }
+    }
+    createButton(parentElement, 'Добавить главу', 'addChapter', '');
   }
-  createButton(parentElement, 'Добавить главу', 'addChapter', '');
 }
 
 async function showChapter() {
@@ -473,8 +499,6 @@ async function showChapter() {
   hideBooks();
   createChapterButton(choosedChapter, parentElement, false)
   createButton(parentElement, 'Редактировать', 'editChapter', 'choosedBook, choosedChapter');
-  createButton(parentElement, 'Задать цель на день', '', '');
-  createButton(parentElement, 'Задать цель на определённый срок', '', '');
   createButton(parentElement, 'Вернуться назад', 'showBook', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
   createButton(parentElement, 'Изменить название главы', 'changeChapterName', '');
@@ -491,6 +515,8 @@ function showBookSettings() {
   hideBooks();
   createBookButton(choosedBook, parentElement, false);
   createButton(parentElement, 'Изменить название книги', 'changeBookName', '');
+  createButton(parentElement, 'Задать цель на день (не реализовано)', '', '');
+  createButton(parentElement, 'Задать цель на определённый срок (не реализовано)', '', '');
   createButton(parentElement, 'Удалить книгу', 'deleteBook', choosedBook);
   createButton(parentElement, 'Вернуться назад', 'showBook', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
@@ -524,7 +550,7 @@ function createChapterButton(i, parentElement, isClickable, showDeleted) {
 
 function createButton(parentElement, lable, func, funcprm) {
   const btn = document.createElement("button");
-  btn.innerHTML = '<br>' + lable + '<br><br>';
+  btn.innerHTML = '<br><b>' + lable + '</b><br><br>';
   btn.setAttribute('class', 'buttonBook');
   if (func != '') {
     btn.setAttribute('onclick', func + '(' + funcprm + ')');
