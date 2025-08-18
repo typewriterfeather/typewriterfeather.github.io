@@ -103,7 +103,7 @@ async function updateFiles(dbxin) {
           //   localStorage.removeItem(b0[0] + '_' + c0[0]);
           // }
           b0[3] = 0;
-          b0[15] = 0;
+          //b0[15] = 0;
 
         } else {
           //log('Сравнить BOOK', b0 + ' ' + b1);
@@ -159,9 +159,11 @@ async function updateFiles(dbxin) {
 
             decision[i][j] = 0;
             c0[16] = mdaStringReplaceChar(c0[16], 0, 0);
-            localStorage.removeItem(b0[0] + '_' + c0[0]);
+            if (c1[3] != 0) {
+              localStorage.removeItem(b0[0] + '_' + c0[0]);
+            }
             c0[3] = 0;
-            c0[15] = 0;
+            //c0[15] = 0;
 
           } else {
             //log('Сравнить', c0 + ' ' + c1);
@@ -175,7 +177,7 @@ async function updateFiles(dbxin) {
                 // Если нет конфликта и файл не обновлялся
                 decision[i][j] = 0;
               }
-            } else if (b1[3] == b1[15]) {
+            } else if ((b1[3] == b1[15]) || !(b1[3])) {
               // Если нет конфликта и файл обновился на сервере
               decision[i][j] = 0;
               downloadBooks.push([b0, c0]);

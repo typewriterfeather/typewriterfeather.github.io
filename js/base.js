@@ -639,8 +639,8 @@ function mdaCreateBookButtonHTML(book, i) {
         creationTimeS = structTime(getDate);
     }
 
-    if (book[3]) {
-        let getDate = parseInt(book[3]);
+    if (book[15]) {
+        let getDate = parseInt(book[15]);
         editDateS = structDate(getDate) + ' ';
         editTimeS = structTime(getDate);
     }
@@ -735,8 +735,8 @@ function mdaCreateChapterButtonHTML(chapter, i) {
         creationTimeS = structTime(getDate);
     }
 
-    if (chapter[3]) {
-        let getDate = parseInt(chapter[3]);
+    if (chapter[15]) {
+        let getDate = parseInt(chapter[15]);
         editDateS = structDate(getDate) + ' ';
         editTimeS = structTime(getDate);
     }
