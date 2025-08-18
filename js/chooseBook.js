@@ -215,8 +215,8 @@ async function updateFiles(dbxin) {
 
     let connectionLost = false;
 
-    //log('uploadBooks', uploadBooks);
-    //log('downloadBooks', downloadBooks);
+    log('uploadBooks', uploadBooks);
+    log('downloadBooks', downloadBooks);
 
     for (let i = 0; i < uploadBooks.length; i++) {
       let name = uploadBooks[i][0][0] + '_' + uploadBooks[i][1][0];

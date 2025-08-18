@@ -397,8 +397,10 @@ function mdaBacCompare2(bacon, bacoff) {
     let comparedCount = 0;
 
     if ((bacon.length > 0) && (bacoff.length > 0)) {
-        for (comparedCount = 0; comparedCount < bacon.length; comparedCount++) {
+        let countTo = Math.min(bacon.length, bacoff.length);
+        for (comparedCount = 0; comparedCount < countTo; comparedCount++) {
             let i = comparedCount;
+            //log('bacoff[i]', bacoff[i]);
             if (bacon[i][0][0] != bacoff[i][0][0]) {
                 break;
             } else {
@@ -710,7 +712,12 @@ function mdaCreateBookButtonHTML(book, i) {
     let out = '';
 
     if (book[16][0] == 1) {
-        out += '* ';
+        out += '*';
+        if (book[16][3] == book[15]) {
+            out += '* ';
+        } else {
+            out += ' ';
+        }
     }
 
     out += book[1] + lastChapter;
