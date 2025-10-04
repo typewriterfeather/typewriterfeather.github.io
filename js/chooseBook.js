@@ -369,6 +369,58 @@ async function saveFiles() {
 }
 
 
+async function addBookByInput(){
+  let inp = document.getElementById('inp1');
+  let bName = inp.value;//= prompt('Введите название книги:', '');
+  console.log(bName);
+  if ((bName) && (bName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
+    bName.replace('	', '');
+    mdaAddBook(bName, bac, mdaBooksParams);
+    await saveFiles();
+    //let k = books.length - 1;
+
+    //chapters[k] = [];
+    //choosedBook = k;
+
+    //await saveChapters();
+    showBooks();
+
+    choosedBook = -1;
+  }
+}
+
+async function changeChapterNameByInput() {
+  let inp = document.getElementById('inp1');
+  let bName = inp.value;//= prompt('Введите название книги:', '');
+  if ((bName) && (bName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
+    bName.replace('	', '');
+    bac[choosedBook][choosedChapter][1] = bName;
+    //bac[choosedBook][choosedChapter][15] = (+(new Date())).toString();
+    await mdaCommitChanges(bac[choosedBook][choosedChapter]);
+    await saveFiles();
+    showChapter();
+  }
+}
+
+async function changeBookNameByInput() {
+  let inp = document.getElementById('inp1');
+  let bName = inp.value;
+  if ((bName) && (bName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
+    bName.replace('	', '');
+    bac[choosedBook][0][1] = bName;
+    //bac[choosedBook][0][15] = (+(new Date())).toString();
+    mdaCommitChanges(bac[choosedBook][0]);
+    await saveFiles();
+    showBook();
+  }
+}
+
 async function addBook() {
   hideBooks();
   setTitle('Обновление...');
@@ -386,6 +438,21 @@ async function addBook() {
     showBooks();
 
     choosedBook = -1;
+  }
+}
+
+async function addChapterByInput() {
+  let inp = document.getElementById('inp1');
+  let cName = inp.value;//= prompt('Введите название книги:', '');
+  if ((cName) && (cName != '')) {
+    hideBooks();
+    setTitle('Обновление...');
+    cName.replace('	', '');
+    await mdaAddChapter(cName, bac[choosedBook]);
+    //console.log('Chapter added');
+    //console.log(bac);
+    await saveFiles();
+    showBook();
   }
 }
 
@@ -422,6 +489,9 @@ function showBooks() {
   setTitle('Список книг');
   const parentElement = document.getElementById('books');
   hideBooks();
+
+  //const inp = createTextInput(parentElement, 'Название книги');
+  //console.log(inp);
   //log('bac', bac);
   for (let i = 0; i < bac.length; i++) {
     if (bac[i][0][16][0] == 1) {
@@ -433,7 +503,49 @@ function showBooks() {
       createBookButton(i, parentElement, true, false);
     }
   }
-  createButton(parentElement, 'Создать книгу', 'addBook', '')
+  createButton(parentElement, 'Создать книгу', 'showCreateBook', '')
+}
+
+function showCreateBook() {
+  setTitle('Создание книги');
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  createTextInput(parentElement, 'Введите название книги:');
+  createButton(parentElement, 'Создать книгу', 'addBookByInput', '');
+  createButton(parentElement, 'Отмена', 'showBooks', '');
+  //createButton(parentElement, 'Создать книгу', 'addBook', '')
+  //createTextInputButton(parentElement, 'Создать книгу', 'addBook', '')
+}
+
+function showChangeChapterName() {
+  setTitle('Изменить название главы "' + bac[choosedBook][choosedChapter][1] + '"');
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  createTextInput(parentElement, 'Введите новое название главы:');
+  createButton(parentElement, 'Изменить название главы', 'changeChapterNameByInput', '');
+  createButton(parentElement, 'Отмена', 'showChapter', '');
+  //createButton(parentElement, 'Создать книгу', 'addBook', '')
+  //createTextInputButton(parentElement, 'Создать книгу', 'addBook', '')
+}
+
+function showCreateChapter() {
+  setTitle('Создание главы в книге "' + bac[choosedBook][0][1] + '"');
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  createTextInput(parentElement, 'Введите название главы:');
+  createButton(parentElement, 'Создать главу', 'addChapterByInput', '');
+  createButton(parentElement, 'Отмена', 'showBook', '');
+  //createButton(parentElement, 'Создать книгу', 'addBook', '')
+  //createTextInputButton(parentElement, 'Создать книгу', 'addBook', '')
+}
+
+function showChangeBookName() {
+  setTitle('Изменение названия книги "' + bac[choosedBook][0][1] + '"');
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  createTextInput(parentElement, 'Введите новое название книги:');
+  createButton(parentElement, 'Изменить название', 'changeBookNameByInput', '');
+  createButton(parentElement, 'Отмена', 'showBook', '');
 }
 
 function hideBooks() {
@@ -477,19 +589,21 @@ async function showBook() {
   createButton(parentElement, 'СОДЕРЖАНИЕ', '', '');
 
   if (bac[choosedBook][0][16][0] == '0') {
-    if (bac[choosedBook]) {
-      for (let i = 1; i < bac[choosedBook].length; i++) {
-        createChapterButton(i, parentElement, false)
-      }
-    }
+    //if (bac[choosedBook]) {
+      // for (let i = 1; i < bac[choosedBook].length; i++) {
+      //   createChapterButton(i, parentElement, false)
+      // }
+    //}
+    createChapterButtons(parentElement, false, false);
     createButton(parentElement, 'Добавить главу (Для доступа начните редактировать книгу)', '', '');
   } else {
-    if (bac[choosedBook]) {
-      for (let i = 1; i < bac[choosedBook].length; i++) {
-        createChapterButton(i, parentElement, true)
-      }
-    }
-    createButton(parentElement, 'Добавить главу', 'addChapter', '');
+    //if (bac[choosedBook]) {
+      // for (let i = 1; i < bac[choosedBook].length; i++) {
+      //   createChapterButton(i, parentElement, true)
+      // }
+    //}
+    createChapterButtons(parentElement, true, false);
+    createButton(parentElement, 'Добавить главу', 'showCreateChapter', '');
   }
 }
 
@@ -501,8 +615,8 @@ async function showChapter() {
   createButton(parentElement, 'Редактировать', 'editChapter', 'choosedBook, choosedChapter');
   createButton(parentElement, 'Вернуться назад', 'showBook', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
-  createButton(parentElement, 'Изменить название главы', 'changeChapterName', '');
-  createButton(parentElement, 'Удалить главу', 'deleteChapter', '');
+  createButton(parentElement, 'Изменить название главы', 'showChangeChapterName', '');
+  createButton(parentElement, 'Удалить главу', 'deleteChapterByConfirm1', '');
 }
 
 async function editChapter(bn, cn) {
@@ -514,10 +628,10 @@ function showBookSettings() {
   const parentElement = document.getElementById('books');
   hideBooks();
   createBookButton(choosedBook, parentElement, false);
-  createButton(parentElement, 'Изменить название книги', 'changeBookName', '');
+  createButton(parentElement, 'Изменить название книги', 'showChangeBookName', '');
   createButton(parentElement, 'Задать цель на день (не реализовано)', '', '');
   createButton(parentElement, 'Задать цель на определённый срок (не реализовано)', '', '');
-  createButton(parentElement, 'Удалить книгу', 'deleteBook', choosedBook);
+  createButton(parentElement, 'Удалить книгу', 'deleteBookByConfirm1', choosedBook);
   createButton(parentElement, 'Вернуться назад', 'showBook', '');
   createButton(parentElement, 'Вернуться к списку книг', 'showBooks', '');
 }
@@ -548,6 +662,24 @@ function createChapterButton(i, parentElement, isClickable, showDeleted) {
   }
 }
 
+function createChapterButtons(parentElement, isClickable, showDeleted) {
+  let k = 0;
+  for (let i = 1; i < bac[choosedBook].length; i++) {
+    const chapter = bac[choosedBook][i];
+    if ((chapter[16][1] == 0) || showDeleted) { // Если книга удалена, то она не показывается. Но показывается, если showDelete = true
+      const btn = document.createElement("button");
+      btn.innerHTML = mdaCreateChapterButtonHTML(bac[choosedBook][i], i - k);
+      btn.setAttribute('class', 'buttonBook');
+      if (isClickable) {
+        btn.setAttribute('onclick', 'selectChapter(' + i + ')');
+      }
+      parentElement.appendChild(btn);
+    } else {
+      k++;
+    }
+  }
+}
+
 function createButton(parentElement, lable, func, funcprm) {
   const btn = document.createElement("button");
   btn.innerHTML = '<br><b>' + lable + '</b><br><br>';
@@ -560,6 +692,13 @@ function createButton(parentElement, lable, func, funcprm) {
   parentElement.appendChild(btn);
 }
 
+function createTextInput(parentElement, label) {
+  const inp = document.createElement("div");
+  inp.innerHTML = '<br><div class = "label">' + label + '</div><br><div><input type="text" id="inp1"></div><br>';
+  inp.setAttribute('class', 'textInput');
+  parentElement.appendChild(inp);
+}
+
 function setTitle(title) {
   if (!onlineStatus) {
     title += ' (Оффлайн доступ)';
@@ -567,38 +706,53 @@ function setTitle(title) {
   document.getElementById('booksTitle').innerText = title;
 }
 
+async function deleteBookByConfirm1(n) {
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  setTitle('Удаление книги "' +  bac[n][0][1] + '"');
+  createButton(parentElement, 'Подтвердить удаление', 'deleteBookByConfirm2', n);
+  createButton(parentElement, 'Отмена', 'showBook', '');
+}
+
+async function deleteBookByConfirm2(n) {
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  setTitle('Последнее подтверждение удаления книги "' +  bac[n][0][1] + '" :-(');
+  createButton(parentElement, 'Отмена', 'showBook', '');
+  createButton(parentElement, 'Подтвердить удаление. Книга будет удалена навсегда!', 'deleteBook', n);
+}
+
 async function deleteBook(n) {
-  let confirmDelete = confirm('Вы действительно хотите удалить книгу "' + bac[n][0][1] + '"?');
-  if (confirmDelete) {
-    let confirmDelete = confirm('Вы точно уверены, что хотите удалить книгу "' + bac[n][0][1] + '"? Книга будет удалена навсегда!!!');
-    if (confirmDelete) {
       hideBooks();
       setTitle('Обновление...');
-      //bac.splice(i, 1);
       mdaDeleteBook(bac[n]);
-      //chapters.splice(i, 1);
       await saveFiles();
       showBooks();
-      // if (choosedChapter >= 0) {
-      //   choosedBook -= 1;
-      // }
-    }
-  }
+}
+
+async function deleteChapterByConfirm1() {
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  setTitle('Удаление главы "' +  bac[choosedBook][choosedChapter][1] + '"');
+  createButton(parentElement, 'Подтвердить удаление', 'deleteChapterByConfirm2', '');
+  createButton(parentElement, 'Отмена', 'showChapter', '');
+}
+
+async function deleteChapterByConfirm2() {
+  const parentElement = document.getElementById('books');
+  hideBooks();
+  setTitle('Последнее подтверждение удаления главы "' +  bac[choosedBook][choosedChapter][1] + '" :-(');
+  createButton(parentElement, 'Отмена', 'showChapter', '');
+  createButton(parentElement, 'Подтвердить удаление. Глава будет удалена навсегда!', 'deleteChapter', '');
 }
 
 async function deleteChapter() {
-  let confirmDelete = confirm('Вы действительно хотите удалить Главу ' + choosedChapter + '—' + bac[choosedBook][choosedChapter][1] + '?');
-  if (confirmDelete) {
-    let confirmDelete = confirm('Вы точно уверены, что хотите удалить Главу ' + choosedChapter + '—' + bac[choosedBook][choosedChapter][1] + '? Глава будет удалена навсегда!!!');
-    if (confirmDelete) {
-      hideBooks();
-      setTitle('Обновление...');
-      //bac[choosedBook].splice(choosedChapter, 1);
-      mdaDeleteChapter(bac[choosedBook][choosedChapter]);
-      await saveFiles();
-      showBook();
-    }
-  }
+  hideBooks();
+  setTitle('Обновление...');
+  //bac[choosedBook].splice(choosedChapter, 1);
+  mdaDeleteChapter(bac[choosedBook][choosedChapter]);
+  await saveFiles();
+  showBook();
 }
 
 async function changeBookName() {

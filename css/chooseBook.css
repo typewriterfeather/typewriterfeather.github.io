@@ -43,6 +43,17 @@ body {
   word-break: break-all;
 }
 
+.textInput {
+  text-align: center;
+  width: 100%;
+  margin-top: 0.3em;
+  margin-bottom: 0.3em;
+}
+
+.textInput input {
+  width: 90%;
+}
+
 .bars {
   margin-top: 0.5em;
   margin-bottom: 0.5em;
